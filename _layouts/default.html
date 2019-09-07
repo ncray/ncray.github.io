@@ -1,5 +1,11 @@
-// _layouts/default.html
-...
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>{{ page.title }}</title>
+  </head>
+  <body>
+    {{ content }}
     {% if jekyll.environment == 'production' %}
     {% include analytics.html %}
     {% endif %}
