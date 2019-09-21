@@ -5,6 +5,9 @@ author: nelson
 
 Our first stop on our honeymoon was Stockholm, in order to visit Eric (or *Erik*, as he's known here), who is currently participating in a [general relativity research program](http://www.mittag-leffler.se/langa-program/general-relativity-geometry-and-analysis-beyond-first-100-years-after-einstein) at the Mittag-Leffler Institute, after which he'll spend the rest of a year at the KTH Royal Institute of Technology.
 
+Here's a short video overview:
+<iframe width="560" height="315" src="https://www.youtube.com/embed/uX5ofuvFFzg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 We arrived in the afternoon after a short layover in Iceland, checked in to our Airbnb in the Norrmalm district of Stockholm, and made our way over to the [Vasa Museum](https://en.wikipedia.org/wiki/Vasa_Museum), featuring the eponymous ship that sank in the harbor just ~ 1km into its maiden voyage in 1628. A museum about a ship sounds a little bit boring, except maybe if that ship were the Titanic. Well, maybe even if it *were* the Titanic -- but this was very well done. It's pretty impressive to see a huge, 17th century, prestige warship in most of its glory in a big museum, with bits and pieces of the story told through exhibits and short videos.
 
 I don't think there are any other > ~400 year old warships preserved to such a degree. So, why did it (*spoiler alert*) sink almost immediately after such fanfare? This essentially was the result of a confluence of several unlikely events:
