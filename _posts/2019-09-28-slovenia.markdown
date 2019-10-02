@@ -3,7 +3,8 @@ layout: post
 author: nelson
 ---
 
-Video TODO
+Video
+<iframe width="560" height="315" src="https://www.youtube.com/embed/66xi-uPPyxA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 We took the night train (~6 hours) from Munich, Germany to Lesce, Slovenia (斯洛文尼亞), kicking off the first (of two) former Yugoslavian (南斯拉夫) countries. Interestingly, Slovenia won its independence after just [ten days of war](https://en.wikipedia.org/wiki/Ten-Day_War). By contrast, Croatia saw [nearly five years of war](https://en.wikipedia.org/wiki/Croatian_War_of_Independence). The rough story that I've been able to piece together so far is that Slovenia had a much smaller Serb population than Croatia (2% vs 12%), and was a bit less central, with less critical infrastructure.
 
