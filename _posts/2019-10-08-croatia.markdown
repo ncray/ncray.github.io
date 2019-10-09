@@ -4,7 +4,7 @@ author: nelson
 ---
 
 Video
-TODO
+<iframe width="560" height="315" src="https://www.youtube.com/embed/tnEYkrAwEhc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 > Okay, first off, there are two things you need to know about Croatia: first is that it's a young country, and second is that it's a small country.
 
