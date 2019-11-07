@@ -4,7 +4,7 @@ author: nelson
 ---
 
 Video
-TODO
+<iframe width="560" height="315" src="https://www.youtube.com/embed/7sjzE0bzfLU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Our first impressions of Lisbon were that it's a lot like home. The climate, trolleys, ["Golden Gate Bridge"](https://en.wikipedia.org/wiki/25_de_Abril_Bridge) (which actually was built by the same company that built the Bay Bridge), food markets, and bay views were very familiar. As in Macau, we really enjoyed tasting the different variations of egg tarts (pastel de nata) and quickly made it a daily habit. We spent four nights total in Lisbon, punctuated by a night's stay a bit inland in the historic town of Évora.
 
