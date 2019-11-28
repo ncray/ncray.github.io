@@ -4,7 +4,7 @@ author: nelson
 ---
 
 Video
-TODO
+<iframe width="560" height="315" src="https://www.youtube.com/embed/uGC2rRBSf6c" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Morocco was certainly the most different experience from the rest of our trip (so far) in terms of weather, languages, culture, architecture, landscape, and food. We spent three nights in Marrakech, five nights on the road as part of our tour, and a final three nights again in Marrakech. Our flight arrived fairly late ~ midnight. Drones are basically illegal in Morocco, so I had to leave mine at the airport. It was a bit of an ordeal, but I was able to pick it up at the end of the trip, after paying a nominal storage fee.
 
