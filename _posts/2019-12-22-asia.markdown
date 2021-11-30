@@ -4,7 +4,7 @@ author: nelson
 ---
 
 Video
-TODO
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Ale0ZYuEhZg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Here's an overview of the Asian leg of our trip:
 * 1 night in Shanghai, China
