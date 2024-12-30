@@ -18,10 +18,8 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Kelly and Nelson's Honeymoon Adventures
+title: Nelson's GH Page
 email: ncray86@gmail.com
-description: >- # this means to ignore newlines until "baseurl:"
-  A travel blog for friends and family to be able to follow along as we embark on our new life together.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: ncray86
@@ -31,6 +29,7 @@ github_username:  ncray
 theme: minima
 plugins:
   - jekyll-feed
+permalink: /blog/:categories/:year/:month/:day/:title:output_ext
 
 # Exclude from processing.
 # The following items will not be processed, by default.
