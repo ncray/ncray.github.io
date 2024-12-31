@@ -167,14 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Generate prompt based on member's name
         const fullPrompt = `You are ${memberName}, an expert in your field. Provide insightful and relevant advice based on the following user query.\n\nUser Query: ${userQuery}\n\nYour Advice:`;
         const responseText = await queryGemini(apiKey, fullPrompt);
-        return responseText;
-    }
-
-    // Function to sanitize HTML to prevent XSS attacks (Optional but recommended)
-    function sanitizeHTML(html) {
-        const temp = document.createElement('div');
-        temp.textContent = html;
-        return temp.innerHTML;
     }
 
     // Function to generate a shareable URL based on current form inputs
@@ -277,59 +269,50 @@ document.addEventListener('DOMContentLoaded', () => {
         geminiDiv.innerHTML = `<strong>Gemini Summary:</strong> <span class="loading">Loading summary...</span>`;
         responsesDiv.appendChild(geminiDiv);
 
-        // Array to hold individual responses
-        const individualResponses = [];
-
-        // Create an array of Promises for all board members
-        const boardPromises = boardMembers.map(member => {
-            const memberId = `response-${member.name.replace(/\s+/g, '-')}`;
-            return queryBoardMember(member.name, userQuery, apiKey)
-                .then(responseText => {
-                    individualResponses.push({ name: member.name, advice: responseText });
-
-                    // Convert Markdown to HTML using Marked.js
-                    const htmlContent = marked.parse(responseText);
-                    // Sanitize the HTML using DOMPurify
-                    const sanitizedContent = DOMPurify.sanitize(htmlContent);
-                    // Insert the sanitized HTML
-                    const memberDiv = document.getElementById(memberId);
-                    if (memberDiv) {
-                        memberDiv.innerHTML = `<strong>${member.name}:</strong> ${sanitizedContent}`;
-                    }
-                })
-                .catch(error => {
-                    const memberDiv = document.getElementById(memberId);
-                    if (memberDiv) {
-                        memberDiv.innerHTML = `<strong>${member.name}:</strong> <span class="error">Error: ${error.message}</span>`;
-                    }
-                });
+        // Create a single prompt for all board members, requesting a JSON output
+        let fullPrompt = `You are a board of directors, each with your own area of expertise. You must respond with a JSON object. The JSON object should have two keys: "summary" and "advice". The "summary" key should contain a concise summary of the advice you will provide referencing each board member's perspective. The "advice" key should be an array of objects, where each object represents a board member's advice. Each object in the "advice" array should have two keys: "name" and "text". The "name" key should contain the board member's name, and the "text" key should contain the board member's advice. Provide insightful and relevant advice based on the following user query.\n\nUser Query: ${userQuery}\n\n`;
+        boardMembers.forEach(member => {
+            fullPrompt += `**${member.name}**: `;
         });
+        fullPrompt += `\n\nYour JSON Response:`;
 
-        // Wait for all board member Promises to complete
-        Promise.all(boardPromises)
-            .then(() => {
-                // After collecting all individual responses, create a summary prompt
-                const summaryPrompt = `Please provide a concise summary of the following advice from each board member regarding the user's query:\n\n` +
-                    individualResponses.map(member => `**${member.name}**:\n${member.advice}`).join('\n\n');
+        // Fetch the response from Gemini
+        queryGemini(apiKey, fullPrompt)
+            .then(responseText => {
+                try {
+                    // Remove markdown code fences if present
+                    const jsonString = responseText.replace(/^```json\n/, '').replace(/\n```$/, '');
+                    const jsonResponse = JSON.parse(jsonString);
+                    console.log('Parsed JSON:', jsonResponse);
+                    const summary = jsonResponse.summary || "No summary provided.";
+                    const advice = jsonResponse.advice || [];
 
-                // Fetch the summary from Gemini
-                queryGemini(apiKey, summaryPrompt)
-                    .then(summaryText => {
-                        // Convert Markdown to HTML using Marked.js
-                        const summaryHtml = marked.parse(summaryText);
-                        // Sanitize the HTML using DOMPurify
-                        const sanitizedSummary = DOMPurify.sanitize(summaryHtml);
-                        // Insert the sanitized summary into the Gemini summary div
-                        geminiDiv.innerHTML = `<strong>Gemini Summary:</strong> ${sanitizedSummary}`;
-                    })
-                    .catch(error => {
-                        geminiDiv.innerHTML = `<strong>Gemini Summary:</strong> <span class="error">Error: ${error.message}</span>`;
+                    // Insert the sanitized HTML into the Gemini summary div
+                    const summaryHtml = marked.parse(summary);
+                    const sanitizedSummary = DOMPurify.sanitize(summaryHtml);
+                    geminiDiv.innerHTML = `<strong>Gemini Summary:</strong> ${sanitizedSummary}`;
+
+                    // Display individual member responses
+                    advice.forEach((item) => {
+                        const member = boardMembers.find(m => m.name.toLowerCase() === item.name.toLowerCase());
+                        if (member) {
+                            const memberId = `response-${member.name.replace(/\s+/g, '-')}`;
+                            const memberDiv = document.getElementById(memberId);
+                            
+                            if (memberDiv) {
+                                const adviceHtml = marked.parse(item.text);
+                                const sanitizedAdvice = DOMPurify.sanitize(adviceHtml);
+                                memberDiv.innerHTML = `<strong>${member.name}:</strong> ${sanitizedAdvice}`;
+                            }
+                        }
                     });
+                } catch (error) {
+                    console.error('JSON Parsing Error:', error);
+                    geminiDiv.innerHTML = `<strong>Gemini Summary:</strong> <span class="error">Error parsing JSON response.</span>`;
+                }
             })
             .catch(error => {
-                // Handle any unexpected errors
-                console.error('Unexpected Error:', error);
-                geminiDiv.innerHTML = `<strong>Gemini Summary:</strong> <span class="error">An unexpected error occurred while processing your request.</span>`;
+                geminiDiv.innerHTML = `<strong>Gemini Summary:</strong> <span class="error">Error: ${error.message}</span>`;
             });
 
         // Optionally, generate and display a shareable URL
