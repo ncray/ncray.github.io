@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Enhanced AAC App with Comprehensive Emoji Search</title>
+    <!-- Include Fuse.js from CDN for fuzzy search -->
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        .editor, .aac-board {
+            max-width: 900px;
+            margin: auto;
+        }
+        .grid-config {
+            margin-bottom: 20px;
+        }
+        .grid-config label {
+            margin-right: 10px;
+        }
+        .grid {
+            display: grid;
+            gap: 10px;
+        }
+        .grid-item {
+            display: flex;
+            flex-direction: column;
+            position: relative; /* For positioning emoji picker */
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .grid-item input {
+            margin-top: 5px;
+            padding: 5px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .aac-grid {
+            display: grid;
+            gap: 20px;
+        }
+        .aac-grid-item {
+            text-align: center;
+            cursor: pointer;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f0f8ff;
+            transition: background-color 0.3s;
+        }
+        .aac-grid-item:hover {
+            background-color: #e6f2ff;
+        }
+        .share-link {
+            margin-top: 20px;
+            word-break: break-all;
+            background-color: #eef;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .back-button {
+            margin-top: 20px;
+        }
+        /* Emoji Picker Styling */
+        .emoji-picker-button {
+            margin-top: 5px;
+            padding: 5px 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+        }
+        .emoji-picker-container {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            border: 1px solid #ccc;
+            background: white;
+            max-height: 400px;
+            overflow-y: auto;
+            width: 100%;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+        .emoji-picker-header {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .emoji-picker-header input {
+            width: 100%;
+            padding: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .emoji-picker-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+        }
+        .emoji-picker-item:hover {
+            background-color: #f0f0f0;
+        }
+        .emoji-name {
+            margin-left: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        /* Loading Indicator */
+        .loading {
+            text-align: center;
+            font-size: 1.2em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="editor">
+    <h1>Enhanced AAC Editor</h1>
+    <div class="grid-config">
+        <label>
+            Rows:
+            <input type="number" id="rows-input" min="1" max="10" value="5">
+        </label>
+        <label>
+            Columns:
+            <input type="number" id="cols-input" min="1" max="10" value="5">
+        </label>
+        <button id="update-grid-btn">Update Grid</button>
+    </div>
+    <div id="grid-container" class="grid">
+        <div class="loading">Loading emojis, please wait...</div>
+    </div>
+    <button id="generate-board-btn" disabled>Generate AAC Board</button>
+    <div id="share-link" class="share-link"></div>
+</div>
+
+<div class="aac-board hidden">
+    <h1>Simple AAC Board</h1>
+    <div id="aac-grid" class="aac-grid"></div>
+    <div class="back-button">
+        <button id="back-to-editor-btn">Back to Editor</button>
+    </div>
+</div>
+
+<script>
+    // Initialize variables
+    let emojiList = []; // Will be populated dynamically
+    let fuse; // Fuse.js instance
+
+    // Function to get URL parameter by name
+    function getURLParameter(name) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+    }
+
+    // Function to set URL parameter
+    function setURLParameter(name, value) {
+        const params = new URLSearchParams(window.location.search);
+        params.set(name, value);
+        window.history.replaceState({}, '', `${location.pathname}?${params}`);
+    }
+
+    // Function to fetch emoji data
+    async function fetchEmojiData() {
+        try {
+            const response = await fetch('https://unpkg.com/emoji.json@13.1.0/emoji.json');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            // Debug: Log the fetched data
+            console.log('Fetched emoji data:', data.slice(0, 5)); // Log first 5 items for verification
+
+            // Process data to match the required format: { emoji: "😀", name: "Grinning Face" }
+            // Corrected property names based on actual data structure
+            emojiList = data.map(item => ({
+                emoji: item.char, // Changed from item.emoji to item.char
+                name: item.description || item.name // Changed from item.annotation || item.name to item.description || item.name
+            }));
+
+            // Initialize Fuse.js after fetching emojis
+            fuse = new Fuse(emojiList, {
+                keys: ['name'],
+                threshold: 0.3, // Adjust based on desired sensitivity
+            });
+
+            // Remove loading indicator and enable generate button
+            const gridContainer = document.getElementById('grid-container');
+            const loadingIndicator = gridContainer.querySelector('.loading');
+            if (loadingIndicator) {
+                loadingIndicator.remove();
+            }
+            document.getElementById('generate-board-btn').disabled = false;
+
+            // If editor grid is already created, re-render it
+            const configParam = getURLParameter('config');
+            if (!configParam) {
+                const defaultRows = 5;
+                const defaultCols = 5;
+                createEditorGrid(defaultRows, defaultCols);
+            }
+        } catch (error) {
+            console.error('Error fetching emoji data:', error);
+            const gridContainer = document.getElementById('grid-container');
+            const loadingIndicator = gridContainer.querySelector('.loading');
+            if (loadingIndicator) {
+                loadingIndicator.textContent = 'Failed to load emojis. Please try again later.';
+            }
+        }
+    }
+
+    // Call fetchEmojiData on page load
+    window.onload = function() {
+        const configParam = getURLParameter('config');
+        if (configParam) {
+            try {
+                const decoded = decodeURIComponent(configParam);
+                const config = JSON.parse(decoded);
+                if (config.rows && config.cols && config.cells) {
+                    // Initialize emojiList and fuse before generating the board
+                    fetch('https://unpkg.com/emoji.json@13.1.0/emoji.json')
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network response was not ok');
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Fetched emoji data for AAC Board:', data.slice(0, 5)); // Debug
+
+                            // Corrected property names
+                            emojiList = data.map(item => ({
+                                emoji: item.char, // Changed from item.emoji to item.char
+                                name: item.description || item.name // Changed from item.annotation || item.name to item.description || item.name
+                            }));
+
+                            fuse = new Fuse(emojiList, {
+                                keys: ['name'],
+                                threshold: 0.3,
+                            });
+
+                            generateAACBoard(config);
+                        })
+                        .catch(error => {
+                            console.error('Error fetching emoji data for AAC Board:', error);
+                            alert('Failed to load emojis. Please try again later.');
+                        });
+                    return;
+                }
+            } catch (e) {
+                console.error('Invalid configuration:', e);
+            }
+        }
+        // If no valid config, show editor and fetch emojis
+        fetchEmojiData();
+    };
+
+    // Function to create the editor grid
+    function createEditorGrid(rows, cols, existingCells = []) {
+        const gridContainer = document.getElementById('grid-container');
+        gridContainer.innerHTML = ''; // Clear existing grid
+        gridContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+        for (let i = 0; i < rows * cols; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'grid-item';
+
+            // Emoji input (read-only)
+            const emojiInput = document.createElement('input');
+            emojiInput.type = 'text';
+            emojiInput.placeholder = 'Select Emoji';
+            emojiInput.readOnly = true; // Prevent manual typing
+            emojiInput.value = existingCells[i] ? existingCells[i].emoji : '';
+            emojiInput.className = 'emoji-input';
+
+            // Emoji Picker Button
+            const emojiPickerBtn = document.createElement('button');
+            emojiPickerBtn.textContent = 'Select Emoji 🔍';
+            emojiPickerBtn.type = 'button';
+            emojiPickerBtn.className = 'emoji-picker-button';
+
+            // Emoji Picker Container
+            const emojiPickerContainer = document.createElement('div');
+            emojiPickerContainer.className = 'emoji-picker-container';
+
+            // Emoji Picker Header with Search Input
+            const emojiPickerHeader = document.createElement('div');
+            emojiPickerHeader.className = 'emoji-picker-header';
+
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.placeholder = 'Search emojis...';
+            searchInput.className = 'emoji-search-input';
+
+            emojiPickerHeader.appendChild(searchInput);
+            emojiPickerContainer.appendChild(emojiPickerHeader);
+
+            // Emoji List Container
+            const emojiListContainer = document.createElement('div');
+            emojiListContainer.className = 'emoji-list-container';
+
+            // Function to render emojis
+            function renderEmojis(list) {
+                emojiListContainer.innerHTML = ''; // Clear existing
+                if (list.length === 0) {
+                    const noResult = document.createElement('div');
+                    noResult.className = 'emoji-picker-item';
+                    noResult.textContent = 'No emojis found.';
+                    emojiListContainer.appendChild(noResult);
+                    return;
+                }
+                list.forEach(item => {
+                    const emojiItem = document.createElement('div');
+                    emojiItem.className = 'emoji-picker-item';
+                    emojiItem.innerHTML = `${item.emoji} <span class="emoji-name">${item.name}</span>`;
+                    emojiItem.addEventListener('click', function() {
+                        emojiInput.value = item.emoji;
+                        // Automatically fill the word input with the emoji's name if empty
+                        const wordInput = cell.querySelector('.word-input');
+                        if (!wordInput.value.trim()) {
+                            wordInput.value = item.name;
+                        }
+                        emojiPickerContainer.style.display = 'none';
+                    });
+                    emojiListContainer.appendChild(emojiItem);
+                });
+            }
+
+            // Initial render with all emojis
+            renderEmojis(emojiList);
+
+            // Append emoji list to picker
+            emojiPickerContainer.appendChild(emojiListContainer);
+
+            // Event listener for opening/closing emoji picker
+            emojiPickerBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent event from bubbling
+                // Toggle visibility
+                if (emojiPickerContainer.style.display === 'none' || emojiPickerContainer.style.display === '') {
+                    emojiPickerContainer.style.display = 'block';
+                    searchInput.focus();
+                } else {
+                    emojiPickerContainer.style.display = 'none';
+                }
+            });
+
+            // Event listener for search input
+            searchInput.addEventListener('input', function() {
+                const query = searchInput.value.trim();
+                if (query === '') {
+                    renderEmojis(emojiList);
+                } else {
+                    const results = fuse.search(query).map(result => result.item);
+                    renderEmojis(results);
+                }
+            });
+
+            // Hide emoji picker when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!cell.contains(e.target)) {
+                    emojiPickerContainer.style.display = 'none';
+                }
+            });
+
+            cell.appendChild(emojiInput);
+            cell.appendChild(emojiPickerBtn);
+            cell.appendChild(emojiPickerContainer);
+
+            // Word input
+            const wordInput = document.createElement('input');
+            wordInput.type = 'text';
+            wordInput.placeholder = 'Word to Speak';
+            wordInput.value = existingCells[i] ? existingCells[i].word : '';
+            wordInput.className = 'word-input';
+            cell.appendChild(wordInput);
+
+            gridContainer.appendChild(cell);
+        }
+    }
+
+    // Function to generate AAC board
+    function generateAACBoard(config) {
+        const editor = document.querySelector('.editor');
+        const aacBoard = document.querySelector('.aac-board');
+        editor.classList.add('hidden');
+        aacBoard.classList.remove('hidden');
+
+        const aacGrid = document.getElementById('aac-grid');
+        aacGrid.innerHTML = '';
+        aacGrid.style.gridTemplateColumns = `repeat(${config.cols}, 1fr)`;
+
+        config.cells.forEach(cell => {
+            const aacItem = document.createElement('div');
+            aacItem.className = 'aac-grid-item';
+
+            // Create a container for emoji and text
+            const emojiContainer = document.createElement('div');
+            emojiContainer.style.display = 'flex';
+            emojiContainer.style.flexDirection = 'column';
+            emojiContainer.style.alignItems = 'center';
+
+            // Emoji Element
+            const emojiElement = document.createElement('div');
+            emojiElement.style.fontSize = '3em';
+            emojiElement.textContent = cell.emoji;
+            emojiElement.style.cursor = 'pointer';
+
+            // Word Element
+            const wordElement = document.createElement('div');
+            wordElement.style.marginTop = '10px';
+            wordElement.style.fontSize = '1em';
+            wordElement.style.color = '#333';
+            wordElement.textContent = cell.word;
+
+            // Event listener for speech synthesis
+            emojiElement.addEventListener('click', function() {
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(cell.word);
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    alert('Speech Synthesis not supported in this browser.');
+                }
+            });
+
+            // Append emoji and word to container
+            emojiContainer.appendChild(emojiElement);
+            emojiContainer.appendChild(wordElement);
+
+            aacItem.appendChild(emojiContainer);
+            aacGrid.appendChild(aacItem);
+        });
+    }
+
+    // Function to collect configuration from editor
+    function collectConfig(rows, cols) {
+        const cells = [];
+        const gridContainer = document.getElementById('grid-container');
+        const gridItems = gridContainer.getElementsByClassName('grid-item');
+        for (let item of gridItems) {
+            const emoji = item.querySelector('.emoji-input').value.trim();
+            const word = item.querySelector('.word-input').value.trim();
+            cells.push({ emoji, word });
+        }
+        return { rows, cols, cells };
+    }
+
+    // Function to initialize the editor with existing config
+    function initializeEditor(config) {
+        document.getElementById('rows-input').value = config.rows;
+        document.getElementById('cols-input').value = config.cols;
+        createEditorGrid(config.rows, config.cols, config.cells);
+    }
+
+    // Event listener for updating grid size
+    document.getElementById('update-grid-btn').addEventListener('click', function() {
+        const rows = parseInt(document.getElementById('rows-input').value);
+        const cols = parseInt(document.getElementById('cols-input').value);
+        if (isNaN(rows) || isNaN(cols) || rows < 1 || cols < 1 || rows > 10 || cols > 10) {
+            alert('Please enter valid rows and columns (1-10).');
+            return;
+        }
+        createEditorGrid(rows, cols);
+    });
+
+    // Event listener for generating AAC board
+    document.getElementById('generate-board-btn').addEventListener('click', function() {
+        const rows = parseInt(document.getElementById('rows-input').value);
+        const cols = parseInt(document.getElementById('cols-input').value);
+        if (isNaN(rows) || isNaN(cols) || rows < 1 || cols < 1 || rows > 10 || cols > 10) {
+            alert('Please enter valid rows and columns (1-10).');
+            return;
+        }
+        const config = collectConfig(rows, cols);
+        // Validate that all cells have emoji and word
+        for (let i = 0; i < config.cells.length; i++) {
+            const cell = config.cells[i];
+            if (!cell.emoji || !cell.word) {
+                alert(`Please fill in all emojis and words. Missing at cell ${i + 1}.`);
+                return;
+            }
+        }
+        const configString = JSON.stringify(config);
+        const encodedConfig = encodeURIComponent(configString);
+        setURLParameter('config', encodedConfig);
+        // Generate AAC board
+        generateAACBoard(config);
+        // Display shareable link
+        const shareLinkDiv = document.getElementById('share-link');
+        shareLinkDiv.innerHTML = `Shareable Link: <a href="${window.location.href}">${window.location.href}</a>`;
+    });
+
+    // Event listener for back to editor button
+    document.getElementById('back-to-editor-btn').addEventListener('click', function() {
+        const editor = document.querySelector('.editor');
+        const aacBoard = document.querySelector('.aac-board');
+        aacBoard.classList.add('hidden');
+        editor.classList.remove('hidden');
+    });
+</script>
+
+</body>
+</html>
