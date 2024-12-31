@@ -162,12 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Function to send a request to a Board Member
-    async function queryBoardMember(memberName, userQuery, apiKey) {
-        // Generate prompt based on member's name
-        const fullPrompt = `You are ${memberName}, an expert in your field. Provide insightful and relevant advice based on the following user query.\n\nUser Query: ${userQuery}\n\nYour Advice:`;
-        const responseText = await queryGemini(apiKey, fullPrompt);
-    }
 
     // Function to generate a shareable URL based on current form inputs
     function generateShareableURL() {
@@ -270,9 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
         responsesDiv.appendChild(geminiDiv);
 
         // Create a single prompt for all board members, requesting a JSON output
-        let fullPrompt = `You are a board of directors, each with your own area of expertise. You must respond with a JSON object. The JSON object should have two keys: "summary" and "advice". The "summary" key should contain a concise summary of the advice you will provide referencing each board member's perspective. The "advice" key should be an array of objects, where each object represents a board member's advice. Each object in the "advice" array should have two keys: "name" and "text". The "name" key should contain the board member's name, and the "text" key should contain the board member's advice. Provide insightful and relevant advice based on the following user query.\n\nUser Query: ${userQuery}\n\n`;
-        boardMembers.forEach(member => {
-            fullPrompt += `**${member.name}**: `;
+        let fullPrompt = `You are a board of directors, each with your own area of expertise. You must respond with a JSON object. The JSON object should have two keys: "summary" and "advice". The "summary" key should contain a concise summary of the advice you will provide referencing each board member's perspective. The "advice" key should be an array of objects, where each object represents a board member's advice. Each object in the "advice" array should have three keys: "name", "index", and "text". The "name" key should contain the board member's name, the "index" key should contain the board member's index (starting from 1), and the "text" key should contain the board member's advice. Provide insightful and relevant advice based on the following user query.\n\nUser Query: ${userQuery}\n\n`;
+        boardMembers.forEach((member, index) => {
+            fullPrompt += `**Member ${index + 1}**: `;
         });
         fullPrompt += `\n\nYour JSON Response:`;
 
@@ -294,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Display individual member responses
                     advice.forEach((item) => {
-                        const member = boardMembers.find(m => m.name.toLowerCase() === item.name.toLowerCase());
+                        const member = boardMembers[item.index - 1];
                         if (member) {
                             const memberId = `response-${member.name.replace(/\s+/g, '-')}`;
                             const memberDiv = document.getElementById(memberId);
