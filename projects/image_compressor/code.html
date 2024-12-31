@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Compressor</title>
+    <link rel="stylesheet" href="code.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Drag & Drop Images to Compress</h1>
+        <p>You can drag one or multiple image files onto this page.</p>
+
+        <div id="drop-area">
+            <p>Or, select images manually:</p>
+            <input type="file" id="fileElem" multiple accept="image/*">
+            <label class="button" for="fileElem">Select Images</label>
+        </div>
+
+        <div id="compression-controls">
+            <h2>Compression Options</h2>
+            <label for="compression-level">Compression Level:</label>
+            <input type="range" id="compression-level" min="0" max="100" value="75">
+            <span id="compression-value">75%</span>
+            <p class="hint">Lower value = smaller file size, more loss of quality. <strong>Smart Default: 75%</strong></p>
+        </div>
+
+        <div id="images-container">
+            <!-- Compressed images will be displayed here -->
+        </div>
+
+        <div id="download-options">
+            <button id="download-all">Download All Compressed Images</button>
+            <button id="download-zip">Download All as Zip</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="code.js"></script>
+</body>
+</html>
