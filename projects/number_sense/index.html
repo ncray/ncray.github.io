@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Sense Explorer</title>
+    <!-- Google Fonts for playful look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <div id="score-board">⭐ <span id="score">0</span></div>
+            <button id="start-btn">Start Game 🎵</button>
+        </header>
+        
+        <main>
+            <h1 id="question-text">Which side is bigger?</h1>
+            
+            <div id="comparison-area">
+                <div class="side-container" id="left-side">
+                    <div class="emoji-grid" id="left-emojis"></div>
+                </div>
+                
+                <div class="side-container" id="right-side">
+                    <div class="emoji-grid" id="right-emojis"></div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Hidden audio for future sound effects if needed -->
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

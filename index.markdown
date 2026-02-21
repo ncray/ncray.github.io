@@ -8,6 +8,7 @@ layout: home
 <div class="triphappy-widget" style="width:800px; height: 400px; max-width:100%;"><script src="https://www.triphappy.com/widgets/t/1327586.js" type="text/javascript"></script></div>
 
 ## Projects
+- [Number Sense Game](/projects/number_sense/)
 - [Personal Board of Directors](/projects/personal_bod?num-members=3&user-query=Should+I+invade+Westeros%3F&member-name-1=Tyrion+Lannister&member-name-2=Melisandre&member-name-3=Jorah+Mormont)
 - [AAC Editor](/projects/aac/aac.html)
 - [Local Image Compressor](/projects/image_compressor/code.html)
