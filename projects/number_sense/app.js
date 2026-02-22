@@ -74,15 +74,11 @@ function generateRound() {
         currentRightCount = getRandomInt(MIN_NUMBER, MAX_NUMBER);
     } while (currentRightCount === currentLeftCount); // Ensure they are not equal
 
-    // Pick two random distinct emojis
-    let leftEmoji = getRandomEmoji();
-    let rightEmoji;
-    do {
-        rightEmoji = getRandomEmoji();
-    } while (rightEmoji === leftEmoji);
+    // Pick a random emoji
+    let emoji = getRandomEmoji();
 
-    renderEmojis(leftEmojisDiv, currentLeftCount, leftEmoji);
-    renderEmojis(rightEmojisDiv, currentRightCount, rightEmoji);
+    renderEmojis(leftEmojisDiv, currentLeftCount, emoji);
+    renderEmojis(rightEmojisDiv, currentRightCount, emoji);
 
     gameContainer.classList.add('playing');
     isWaitingForInput = false; // Prevent clicks while speaking
