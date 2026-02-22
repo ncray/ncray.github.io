@@ -83,7 +83,7 @@ function generateRound() {
     gameContainer.classList.add('playing');
     isWaitingForInput = false; // Prevent clicks while speaking
 
-    speak("Which side is bigger?", () => {
+    speak("Which side has more?", () => {
         isWaitingForInput = true;
     });
 }
