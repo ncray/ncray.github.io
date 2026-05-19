@@ -9,12 +9,7 @@ layout: home
   </div>
 </section>
 
-<section class="travel-map-section">
-  <h2 class="section-title">📍 Global Adventures</h2>
-  <div class="widget-wrapper">
-    <div class="triphappy-widget" style="width:100%; height: 400px; max-width:100%;"><script src="https://www.triphappy.com/widgets/t/1327586.js" type="text/javascript"></script></div>
-  </div>
-</section>
+
 
 <section class="projects-section">
   <h2 class="section-title">🛠️ Crafted Projects</h2>
