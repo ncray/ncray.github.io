@@ -114,7 +114,7 @@ function handleSideClick(side) {
     void clickedContainer.offsetWidth;
 
     if (isCorrect) {
-        isWaitingForInput = false; // block inputs during feedback
+        isWaitingForInput = false; // block inputs during feedback animation
         score++;
         scoreDisplay.textContent = score;
 
@@ -122,24 +122,27 @@ function handleSideClick(side) {
         clickedContainer.classList.add('success-bounce');
         triggerConfetti(clickedContainer);
 
-        speak("Good job!", () => {
-            // Slight delay before next round
-            setTimeout(() => {
-                clickedContainer.classList.remove('success-bounce');
-                generateRound();
-            }, 500);
-        });
+        // Speak encouragement in background
+        speak("Good job!");
+
+        // Move to next round immediately after animation completes (600ms)
+        setTimeout(() => {
+            clickedContainer.classList.remove('success-bounce');
+            generateRound();
+        }, 600);
     } else {
         isWaitingForInput = false;
         // Visual Feedback
         clickedContainer.classList.add('shake');
 
-        speak("Try again!", () => {
-            setTimeout(() => {
-                clickedContainer.classList.remove('shake');
-                isWaitingForInput = true;
-            }, 500); // give it a moment to rest
-        });
+        // Speak warning in background
+        speak("Try again!");
+
+        // Allow click input again immediately after shake animation completes (500ms)
+        setTimeout(() => {
+            clickedContainer.classList.remove('shake');
+            isWaitingForInput = true;
+        }, 500);
     }
 }
 
