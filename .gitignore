@@ -6,3 +6,11 @@ vendor
 .DS_Store
 assets/.DS_Store
 Gemfile.lock
+
+# Japan Trip project files to ignore
+projects/japan-trip/scripts/.env
+projects/japan-trip/scripts/.venv/
+projects/japan-trip/**/__pycache__/
+projects/japan-trip/scripts/debug/
+projects/japan-trip/scripts/temp_*/
+

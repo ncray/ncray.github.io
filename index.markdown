@@ -1,15 +1,79 @@
 ---
-# Feel free to add content and custom Front Matter to this file.
-# To modify the layout, see https://jekyllrb.com/docs/themes/#overriding-theme-defaults
-
 layout: home
 ---
 
-<div class="triphappy-widget" style="width:800px; height: 400px; max-width:100%;"><script src="https://www.triphappy.com/widgets/t/1327586.js" type="text/javascript"></script></div>
+<section class="hero-section">
+  <div class="hero-content">
+    <h1 class="hero-title">Nelson's Digital Workshop</h1>
+    <p class="hero-subtitle">Interactive travel planners, utility games, and developer experiments.</p>
+  </div>
+</section>
 
-## Projects
-- [Number Sense Game](/projects/number_sense/)
-- [Personal Board of Directors](/projects/personal_bod?num-members=3&user-query=Should+I+invade+Westeros%3F&member-name-1=Tyrion+Lannister&member-name-2=Melisandre&member-name-3=Jorah+Mormont)
-- [AAC Editor](/projects/aac/aac.html)
-- [Local Image Compressor](/projects/image_compressor/code.html)
-<br>
+<section class="travel-map-section">
+  <h2 class="section-title">📍 Global Adventures</h2>
+  <div class="widget-wrapper">
+    <div class="triphappy-widget" style="width:100%; height: 400px; max-width:100%;"><script src="https://www.triphappy.com/widgets/t/1327586.js" type="text/javascript"></script></div>
+  </div>
+</section>
+
+<section class="projects-section">
+  <h2 class="section-title">🛠️ Crafted Projects</h2>
+  
+  <div class="projects-grid">
+    <!-- Japan Trip Planner -->
+    <a href="/projects/japan-trip/" class="project-card">
+      <div class="card-accent" style="background: linear-gradient(135deg, #ff416c, #ff4b2b);"></div>
+      <div class="project-info">
+        <span class="project-tag">Travel</span>
+        <h3 class="project-name">🇯🇵 Japan Trip Planner 2026</h3>
+        <p class="project-desc">A toddler-friendly adventure planner. Integrates Leaflet maps, custom markers, and detailed phase-by-phase daily transit logistics.</p>
+        <span class="project-btn">Explore Itinerary →</span>
+      </div>
+    </a>
+
+    <!-- Number Sense Game -->
+    <a href="/projects/number_sense/" class="project-card">
+      <div class="card-accent" style="background: linear-gradient(135deg, #11998e, #38ef7d);"></div>
+      <div class="project-info">
+        <span class="project-tag">Game</span>
+        <h3 class="project-name">🧠 Number Sense Game</h3>
+        <p class="project-desc">An engaging mental math challenge game designed to boost cognitive speed, accuracy, and core arithmetic agility.</p>
+        <span class="project-btn">Play Now →</span>
+      </div>
+    </a>
+
+    <!-- Personal Board of Directors -->
+    <a href="/projects/personal_bod?num-members=3&user-query=Should+I+invade+Westeros%3F&member-name-1=Tyrion+Lannister&member-name-2=Melisandre&member-name-3=Jorah+Mormont" class="project-card">
+      <div class="card-accent" style="background: linear-gradient(135deg, #fc00ff, #00dbde);"></div>
+      <div class="project-info">
+        <span class="project-tag">Simulation</span>
+        <h3 class="project-name">👔 Personal Board of Directors</h3>
+        <p class="project-desc">A fun decision-making simulator powered by custom Westeros characters, giving you humorous advice on your toughest queries.</p>
+        <span class="project-btn">Consult Directors →</span>
+      </div>
+    </a>
+
+    <!-- AAC Editor -->
+    <a href="/projects/aac/aac.html" class="project-card">
+      <div class="card-accent" style="background: linear-gradient(135deg, #f5af19, #f12711);"></div>
+      <div class="project-info">
+        <span class="project-tag">Accessibility</span>
+        <h3 class="project-name">🗣️ AAC Editor</h3>
+        <p class="project-desc">An interactive Augmentative and Alternative Communication tool for creating custom text/symbol grid boards to aid speech.</p>
+        <span class="project-btn">Open Editor →</span>
+      </div>
+    </a>
+
+    <!-- Local Image Compressor -->
+    <a href="/projects/image_compressor/code.html" class="project-card">
+      <div class="card-accent" style="background: linear-gradient(135deg, #00c6ff, #0072ff);"></div>
+      <div class="project-info">
+        <span class="project-tag">Utility</span>
+        <h3 class="project-name">🖼️ Local Image Compressor</h3>
+        <p class="project-desc">A fast, secure client-side browser utility for optimizing and compressing images before uploading them online.</p>
+        <span class="project-btn">Compress Images →</span>
+      </div>
+    </a>
+  </div>
+</section>
+

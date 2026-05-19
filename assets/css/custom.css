@@ -1,0 +1,373 @@
+/* Custom Modern Style for Nelson's GH Page */
+
+/* Custom Variables */
+:root {
+  --font-family-title: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  /* Color Palette - Premium Slate & Dark Accents */
+  --bg-primary: #0f172a; /* Deep slate background */
+  --bg-secondary: #1e293b; /* Slightly lighter slate */
+  --bg-card: rgba(30, 41, 59, 0.7); /* Lighter slate with opacity for glassmorphism */
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.15);
+  
+  --text-main: #f8fafc; /* Clear soft white */
+  --text-muted: #94a3b8; /* Cool slate gray */
+  --text-light: #64748b; /* Soft muted gray */
+  
+  --primary-accent: #38bdf8; /* Sky blue */
+  --secondary-accent: #818cf8; /* Indigo accent */
+  --gradient-main: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+  --shadow-sm: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+  
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+}
+
+/* Global Overrides & Resets */
+body {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-main) !important;
+  font-family: var(--font-family-body) !important;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Main Content Wrapper */
+.wrapper {
+  max-width: 1100px !important;
+  margin: 0 auto;
+  padding: 0 24px !important;
+}
+
+/* Modern Glassmorphic Navigation Header */
+.site-header {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color) !important;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 16px 0;
+}
+
+.site-title {
+  font-family: var(--font-family-title) !important;
+  font-weight: 700 !important;
+  font-size: 1.3rem !important;
+  color: var(--text-main) !important;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.site-title::before {
+  content: "🚀";
+}
+
+.site-nav .trigger {
+  display: flex !important;
+  gap: 20px;
+}
+
+.site-nav .page-link {
+  color: var(--text-muted) !important;
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
+  text-decoration: none !important;
+  transition: color 0.25s, transform 0.25s;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+}
+
+.site-nav .page-link:hover {
+  color: var(--primary-accent) !important;
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Hero Section */
+.hero-section {
+  padding: 80px 0 40px;
+  text-align: center;
+}
+
+.hero-title {
+  font-family: var(--font-family-title);
+  font-weight: 800;
+  font-size: 3.5rem;
+  letter-spacing: -2px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.1;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto;
+  font-weight: 350;
+}
+
+/* Common Section Styles */
+.section-title {
+  font-family: var(--font-family-title);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-top: 60px;
+  margin-bottom: 24px;
+  letter-spacing: -0.5px;
+}
+
+/* Triphappy Widget & Map Styling */
+.travel-map-section {
+  margin-top: 40px;
+}
+
+.widget-wrapper {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+/* Custom Projects Grid & Cards */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  margin-bottom: 80px;
+}
+
+.project-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none !important;
+  color: var(--text-main) !important;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.3s, 
+              box-shadow 0.3s;
+}
+
+.project-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-accent {
+  height: 6px;
+  width: 100%;
+}
+
+.project-info {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.project-tag {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--primary-accent);
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.project-name {
+  font-family: var(--font-family-title);
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  color: var(--text-main);
+  line-height: 1.3;
+}
+
+.project-desc {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 24px;
+  flex-grow: 1;
+}
+
+.project-btn {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--primary-accent);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  transition: color 0.2s;
+}
+
+.project-card:hover .project-btn {
+  color: var(--text-main);
+}
+
+/* Blog & Posts Styling */
+.post-list-heading {
+  font-family: var(--font-family-title) !important;
+  font-size: 1.8rem !important;
+  font-weight: 700 !important;
+  color: var(--text-main) !important;
+  margin-top: 40px !important;
+  margin-bottom: 20px !important;
+}
+
+.post-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 0 60px 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.post-list li {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 24px !important;
+  transition: border-color 0.25s, transform 0.25s;
+}
+
+.post-list li:hover {
+  border-color: var(--border-hover);
+  transform: translateX(4px);
+}
+
+.post-meta {
+  font-size: 0.85rem !important;
+  color: var(--text-light) !important;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.post-link {
+  font-family: var(--font-family-title) !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  color: var(--text-main) !important;
+  text-decoration: none !important;
+  transition: color 0.2s;
+}
+
+.post-link:hover {
+  color: var(--primary-accent) !important;
+}
+
+.rss-subscribe {
+  color: var(--text-light) !important;
+  font-size: 0.9rem !important;
+}
+
+.rss-subscribe a {
+  color: var(--text-muted) !important;
+  text-decoration: underline;
+}
+
+/* Blog Post Detail View Styles */
+.post-header {
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.post-title {
+  font-family: var(--font-family-title) !important;
+  font-size: 2.75rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -1px;
+  color: var(--text-main) !important;
+  margin-bottom: 12px !important;
+  line-height: 1.1;
+}
+
+.post-content {
+  font-family: var(--font-family-body);
+  font-size: 1.05rem;
+  color: #cbd5e1 !important; /* Soft white-grey text for comfortable long-form reading */
+  line-height: 1.7;
+}
+
+.post-content p {
+  margin-bottom: 24px;
+}
+
+.post-content img {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  margin: 32px 0;
+  max-width: 100%;
+}
+
+.post-content a {
+  color: var(--primary-accent);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--primary-accent);
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.post-content a:hover {
+  color: var(--text-main);
+  border-bottom-style: solid;
+}
+
+/* Custom Footer Overrides */
+.site-footer {
+  background-color: var(--bg-primary) !important;
+  border-top: 1px solid var(--border-color) !important;
+  padding: 60px 0 !important;
+  color: var(--text-light) !important;
+}
+
+.footer-heading {
+  font-family: var(--font-family-title) !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: var(--text-main) !important;
+  margin-bottom: 16px !important;
+}
+
+.site-footer a {
+  color: var(--text-muted) !important;
+  text-decoration: none !important;
+}
+
+.site-footer a:hover {
+  color: var(--primary-accent) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+}

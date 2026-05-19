@@ -1,0 +1,470 @@
+{
+  "flights": [
+    {
+      "type": "Departure",
+      "date": "2026-05-16",
+      "flight": "ZG029",
+      "from": "SJC",
+      "to": "NRT",
+      "depTime": "11:40",
+      "arrTime": "14:50 (+1)"
+    },
+    {
+      "type": "Return",
+      "date": "2026-06-01",
+      "flight": "ZG030",
+      "from": "NRT",
+      "to": "SJC",
+      "depTime": "16:25",
+      "arrTime": "09:40"
+    }
+  ],
+  "itinerary": [
+    {
+      "phase": 0,
+      "title": "The Narita Landing",
+      "location": "Narita Omotesando",
+      "dates": "May 17 - May 18",
+      "nights": 1,
+      "description": "Immediate rest after an 11-hour flight. Omotesando offers a traditional feel right next to the airport.",
+      "toddlerTip": "Naritasan Park is huge and perfect for stretching little legs after a long flight.",
+      "accommodations": [
+        {
+          "name": "Wakamatsu Honten",
+          "coords": [
+            35.7742,
+            140.3186
+          ],
+          "type": "Ryokan"
+        }
+      ],
+      "activities": [
+        {
+          "name": "Naritasan Park",
+          "coords": [
+            35.777,
+            140.322
+          ],
+          "reason": "Massive park with koi ponds, ideal for toddlers to burn off energy.",
+          "image": "images/naritasan_park_koi_fish.jpg"
+        },
+        {
+          "name": "Narita Omotesando",
+          "coords": [
+            35.773,
+            140.314
+          ],
+          "reason": "Traditional street with fun snacks like 'unagi-pan' and fresh gelato.",
+          "image": "images/narita_omotesando_traditional_street_shops.jpg"
+        },
+        {
+          "name": "Kuriyama Park",
+          "coords": [
+            35.7706,
+            140.3217
+          ],
+          "reason": "Features a mini steam locomotive that kids can see up close.",
+          "image": "images/kuriyama_park_narita_mini_steam_locomotive.jpg"
+        }
+      ],
+      "dailyPlan": [
+        "Day 1: Arrival & Omotesando Walk",
+        "Day 2: Naritasan Park & Kuriyama Park"
+      ]
+    },
+    {
+      "phase": 1,
+      "title": "The Big City Start",
+      "location": "Shinjuku/Shibuya, Tokyo",
+      "dates": "May 18 - May 23",
+      "nights": 5,
+      "description": "Shinjuku is the departure point for the Odakyu Romancecar, making your first transit leg very simple.",
+      "toddlerTip": "Staying in Shinjuku puts you near Shinjuku Gyoen National Garden, perfect for jet lag recovery.",
+      "accommodations": [
+        {
+          "name": "Park Hyatt Tokyo",
+          "coords": [
+            35.6858,
+            139.691
+          ],
+          "type": "Hotel"
+        }
+      ],
+      "activities": [
+        {
+          "name": "Shinjuku Gyoen",
+          "coords": [
+            35.6852,
+            139.7101
+          ],
+          "reason": "Massive green space perfect for toddlers to run around and burn off energy.",
+          "image": "images/shinjuku_gyoen_lush_green_summer.jpg"
+        },
+        {
+          "name": "Asobōno!",
+          "coords": [
+            35.7061,
+            139.7523
+          ],
+          "reason": "The ultimate indoor playground with ball pits and climbing structures.",
+          "image": "images/asobōno.jpg"
+        },
+        {
+          "name": "teamLab Borderless",
+          "coords": [
+            35.6626,
+            139.7401
+          ],
+          "reason": "Immersive digital art at Azabudai Hills. Features the Forest of Resonating Lamps.",
+          "image": "images/teamlab_borderless_forest_of_resonating_lamps.jpg"
+        },
+        {
+          "name": "Robot Park",
+          "coords": [
+            35.6596,
+            139.7291
+          ],
+          "reason": "Outdoor slides and robot-themed equipment in Roppongi Hills.",
+          "image": "images/robot_park_roppongi_hills_outdoor_robot_slides.jpg"
+        },
+        {
+          "name": "Tokyo Disneyland",
+          "coords": [
+            35.6328,
+            139.8806
+          ],
+          "reason": "The happiest place on earth, with toddler-friendly rides and magical parades.",
+          "image": "images/tokyo_disneyland.jpg"
+        },
+        {
+          "name": "Playground Shibuya Kids",
+          "coords": [
+            35.6591,
+            139.7037
+          ],
+          "reason": "Clean, reservation-only indoor play area in the heart of Shibuya.",
+          "image": "images/playground_shibuya_kids.jpg"
+        },
+        {
+          "name": "Shibuya Scramble",
+          "coords": [
+            35.6595,
+            139.7005
+          ],
+          "reason": "Iconic crossing. Experience the organized chaos of Tokyo's busiest intersection.",
+          "image": "images/shibuya_scramble_crossing_aerial_view_no_play_area_no_toddler.jpg"
+        },
+        {
+          "name": "Yoyogi Park",
+          "coords": [
+            35.6717,
+            139.6949
+          ],
+          "reason": "Spacious park near Meiji Shrine, ideal for toddlers to run on expansive lawns.",
+          "image": "images/yoyogi_park.jpg"
+        },
+        {
+          "name": "Tokyo Toy Museum",
+          "coords": [
+            35.6885,
+            139.7183
+          ],
+          "reason": "Tactile play area with wooden toys in a renovated school building.",
+          "image": "images/tokyo_toy_museum.jpg"
+        },
+        {
+          "name": "Fire Museum",
+          "coords": [
+            35.6865,
+            139.7195
+          ],
+          "reason": "Sit in real fire trucks and helicopters. A hands-on delight for toddlers.",
+          "image": "images/fire_museum_tokyo.jpg"
+        }
+      ],
+      "dailyPlan": [
+        "Day 2: Arrival & Shinjuku Gyoen",
+        "Day 3: Asobōno! (Indoor Play)",
+        "Day 4: teamLab Borderless & Robot Park",
+        "Day 5: Tokyo Disneyland",
+        "Day 6: Shibuya & Yoyogi Park",
+        "Day 7: Toy & Fire Museums (Yotsuya)"
+      ]
+    },
+    {
+      "phase": 2,
+      "title": "The Mountain Retreat",
+      "location": "Hakone (Lake Ashi & Gora)",
+      "dates": "May 23 - May 27",
+      "nights": 4,
+      "description": "Slow pace. Splitting the stay between the lake and the mountains reduces transit time for a toddler.",
+      "toddlerTip": "The 3-Day Hakone Free Pass is essential. Use the Digital Pass for seamless travel with a stroller.",
+      "accommodations": [
+        {
+          "name": "The Prince Hakone Lake Ashinoko",
+          "coords": [
+            35.207,
+            139.006
+          ],
+          "type": "Hotel"
+        },
+        {
+          "name": "Hakone Kowakien Ten-yu",
+          "coords": [
+            35.239,
+            139.043
+          ],
+          "type": "Ryokan"
+        }
+      ],
+      "activities": [
+        {
+          "name": "Pirate Ship Cruise",
+          "coords": [
+            35.2016,
+            139.0205
+          ],
+          "reason": "A themed boat ride across Lake Ashi that kids will love.",
+          "image": "images/hakone_pirate_ship_lake_ashi.jpg"
+        },
+        {
+          "name": "Onshi-Hakone Park",
+          "coords": [
+            35.195,
+            139.025
+          ],
+          "reason": "Wide, stroller-friendly paths with spectacular views of Mt. Fuji.",
+          "image": "images/onshi-hakone_park_view_of_mt_fuji.jpg"
+        },
+        {
+          "name": "Hakone Shrine",
+          "coords": [
+            35.1888,
+            139.0261
+          ],
+          "reason": "The famous red torii gate in the water.",
+          "image": "images/hakone_shrine_torii_gate_in_water.jpg"
+        },
+        {
+          "name": "Dakkoshite! Zoo",
+          "coords": [
+            35.206,
+            139.006
+          ],
+          "reason": "A petting zoo specifically designed for small children at Hakone-en.",
+          "image": "images/dakkoshite_zoo_hakone-en_petting_zoo.jpg"
+        },
+        {
+          "name": "Hakone Ropeway",
+          "coords": [
+            35.244,
+            139.01
+          ],
+          "reason": "Gondola ride to the volcanic Owakudani valley.",
+          "image": "images/hakone_ropeway.jpg"
+        },
+        {
+          "name": "Owakudani (Black Eggs)",
+          "coords": [
+            35.2435,
+            139.0194
+          ],
+          "reason": "Explore volcanic activity and eat eggs cooked in the hot springs.",
+          "image": "images/owakudani.jpg"
+        },
+        {
+          "name": "NINJABUS",
+          "coords": [
+            35.204,
+            139.022
+          ],
+          "reason": "Amphibious bus tour with an exciting splash into the lake.",
+          "image": "images/ninjabus_hakone_amphibious_bus.jpg"
+        },
+        {
+          "name": "Hakone Open-Air Museum",
+          "coords": [
+            35.2447,
+            139.0514
+          ],
+          "reason": "Features the 'Net Forest' and 'Zig Zag World' play areas.",
+          "image": "images/hakone_open-air_museum.jpg"
+        },
+        {
+          "name": "Gora Park",
+          "coords": [
+            35.248,
+            139.046
+          ],
+          "reason": "Beautiful gardens with a large central fountain and greenhouses.",
+          "image": "images/hakone_gora_park_fountain.jpg"
+        }
+      ],
+      "dailyPlan": [
+        "Day 7: Arrival at Lake Ashi",
+        "Day 8: Pirate Ship, Park & Shrine",
+        "Day 9: Ropeway to Owakudani & Move to Gora",
+        "Day 10: Open-Air Museum & Gora Park"
+      ]
+    },
+    {
+      "phase": 3,
+      "title": "The Coastal Break",
+      "location": "Atami",
+      "dates": "May 27 - May 30",
+      "nights": 3,
+      "description": "Short hop from Hakone. Focus on relaxation and resort facilities.",
+      "toddlerTip": "RISONARE Atami is 'toddler heaven' with ball pools and climbing walls.",
+      "accommodations": [
+        {
+          "name": "Hoshino Resorts RISONARE Atami",
+          "coords": [
+            35.0945,
+            139.0784
+          ],
+          "type": "Resort"
+        }
+      ],
+      "activities": [
+        {
+          "name": "Marine Spa Atami",
+          "coords": [
+            35.0935,
+            139.0815
+          ],
+          "reason": "All-season water park with pools and slides overlooking the ocean.",
+          "image": "images/marine_spa_atami.jpg"
+        },
+        {
+          "name": "Acao Forest",
+          "coords": [
+            35.0772,
+            139.0776
+          ],
+          "reason": "Beautiful gardens with a high-up swing and ocean views.",
+          "image": "images/acao_forest.jpg"
+        },
+        {
+          "name": "Kinomiya Shrine",
+          "coords": [
+            35.0991,
+            139.0715
+          ],
+          "reason": "Home to a 2,000-year-old camphor tree with a cozy cafe.",
+          "image": "images/kinomiya_shrine_atami.jpg"
+        }
+      ],
+      "dailyPlan": [
+        "Day 11: Arrival & Tree House Forest",
+        "Day 12: Marine Spa Atami",
+        "Day 13: Acao Forest & Kinomiya Shrine"
+      ]
+    },
+    {
+      "phase": 4,
+      "title": "The Waterfront Finale",
+      "location": "Odaiba, Tokyo",
+      "dates": "May 30 - Jun 1",
+      "nights": 2,
+      "description": "Odaiba is essentially a giant, pedestrian-friendly 'mall island.'",
+      "toddlerTip": "Legoland Discovery Center and waterfront park views of Rainbow Bridge.",
+      "accommodations": [
+        {
+          "name": "Hilton Tokyo Odaiba",
+          "coords": [
+            35.6268,
+            139.7711
+          ],
+          "type": "Hotel"
+        }
+      ],
+      "activities": [
+        {
+          "name": "Legoland Discovery Center",
+          "coords": [
+            35.6267,
+            139.7758
+          ],
+          "reason": "Indoor Lego-themed attraction perfect for younger kids.",
+          "image": "images/legoland_discovery_center_tokyo.jpg"
+        },
+        {
+          "name": "teamLab Planets",
+          "coords": [
+            35.6491,
+            139.7895
+          ],
+          "reason": "Sensory art experience. Features the Floating Flower Garden.",
+          "image": "images/teamlab_planets_floating_flower_garden.jpg"
+        },
+        {
+          "name": "Toyosu Park",
+          "coords": [
+            35.6545,
+            139.7942
+          ],
+          "reason": "Expansive park with a water play area, perfect for cooling off after teamLab.",
+          "image": "images/toyosu_park.jpg"
+        },
+        {
+          "name": "Odaiba Waterfront Park",
+          "coords": [
+            35.6295,
+            139.775
+          ],
+          "reason": "Beach-side park with views of the Rainbow Bridge and Statue of Liberty.",
+          "image": "images/odaiba_waterfront_park.jpg"
+        }
+      ],
+      "dailyPlan": [
+        "Day 14: Transit to Odaiba",
+        "Day 15: Legoland & teamLab Planets",
+        "Day 16: Departure (Limousine Bus to NRT)"
+      ]
+    }
+  ],
+  "transit": [
+    {
+      "from": "NRT",
+      "to": "Narita",
+      "mode": "Taxi/Train",
+      "time": "15m",
+      "cost": 1500
+    },
+    {
+      "from": "Narita",
+      "to": "Shinjuku",
+      "mode": "JR Train",
+      "time": "80m",
+      "cost": 1500
+    },
+    {
+      "from": "Shinjuku",
+      "to": "Hakone",
+      "mode": "3-Day Free Pass + Romancecar",
+      "time": "85m",
+      "cost": 7700
+    },
+    {
+      "from": "Hakone",
+      "to": "Atami",
+      "mode": "Local Train/Bus",
+      "time": "60m",
+      "cost": 1000
+    },
+    {
+      "from": "Atami",
+      "to": "Odaiba",
+      "mode": "Shinkansen + Local",
+      "time": "90m",
+      "cost": 4100
+    },
+    {
+      "from": "Odaiba",
+      "to": "NRT",
+      "mode": "Limousine Bus",
+      "time": "80m",
+      "cost": 3200
+    }
+  ]
+}

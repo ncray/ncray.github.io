@@ -1,0 +1,6 @@
+scripts/.env
+scripts/.venv/
+**/__pycache__/
+.DS_Store
+scripts/debug/
+scripts/temp_*/
