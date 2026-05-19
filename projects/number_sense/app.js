@@ -20,6 +20,7 @@ const scoreDisplay = document.getElementById('score');
 // Speech Synthesis Setup
 const synth = window.speechSynthesis;
 let voices = [];
+const activeUtterances = new Set(); // Prevent garbage collection of speech utterances
 
 function loadVoices() {
     voices = synth.getVoices();
@@ -34,15 +35,22 @@ function speak(text, callback = null) {
     }
     const utterThis = new SpeechSynthesisUtterance(text);
 
-    // Try to find a friendly, energetic voice (e.g., female or kid-like if available, else default)
-    // On Mac, 'Samantha' or 'Alex' are common. We'll just pick a default for now.
-    // Adjust pitch and rate for a friendlier tone
+    // Try to find a friendly, energetic voice
     utterThis.pitch = 1.2;
     utterThis.rate = 0.9;
 
-    if (callback) {
-        utterThis.onend = callback;
-    }
+    activeUtterances.add(utterThis);
+
+    const handleSpeechEnd = () => {
+        activeUtterances.delete(utterThis);
+        if (callback) {
+            callback();
+        }
+    };
+
+    utterThis.onend = handleSpeechEnd;
+    utterThis.onerror = handleSpeechEnd; // Prevent hanging on permission blocks or errors
+
     synth.speak(utterThis);
 }
 
@@ -81,12 +89,11 @@ function generateRound() {
     renderEmojis(rightEmojisDiv, currentRightCount, emoji);
 
     gameContainer.classList.add('playing');
-    isWaitingForInput = false; // Prevent clicks while speaking
+    isWaitingForInput = true; // Allow input immediately for responsive, snappy gameplay
 
-    speak("Which side has more?", () => {
-        isWaitingForInput = true;
-    });
+    speak("Which side has more?");
 }
+
 
 function handleSideClick(side) {
     if (!isWaitingForInput) return;
