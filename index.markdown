@@ -37,6 +37,17 @@ layout: home
       </div>
     </a>
 
+    <!-- Number Bridge Game -->
+    <a href="/projects/number_bridge/" class="project-card">
+      <div class="card-accent" style="background: linear-gradient(135deg, #ff4081, #ffd54f);"></div>
+      <div class="project-info">
+        <span class="project-tag">Game</span>
+        <h3 class="project-name">🌈 Number Bridge</h3>
+        <p class="project-desc">An educational counting and numeral matching game designed for toddler Caleb, featuring subitizing grids, errorless learning, and soothing chimes.</p>
+        <span class="project-btn">Play Now →</span>
+      </div>
+    </a>
+
     <!-- Personal Board of Directors -->
     <a href="/projects/personal_bod?num-members=3&user-query=Should+I+invade+Westeros%3F&member-name-1=Tyrion+Lannister&member-name-2=Melisandre&member-name-3=Jorah+Mormont" class="project-card">
       <div class="card-accent" style="background: linear-gradient(135deg, #fc00ff, #00dbde);"></div>
