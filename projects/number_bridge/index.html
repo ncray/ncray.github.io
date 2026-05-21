@@ -975,48 +975,42 @@
 
         // --- Distractor & Choice Range Math Logic ---
         function generateOptions(correctCount, level) {
-            let distractor = 0;
+            const candidates = [];
             
-            // Randomly decides if the incorrect choice is larger or smaller
-            const sign = Math.random() < 0.5 ? 1 : -1;
-            
-            switch (level) {
-                case 1: // Novice: 1-3. Distractor is completely far (4-10)
-                    do {
-                        distractor = Math.floor(Math.random() * 7) + 4; // Range 4 to 10
-                    } while (distractor === correctCount);
-                    break;
-                    
-                case 2: // Easy: 1-5. Distractor is distinct (difference >= 3)
-                    do {
-                        const offset = (Math.floor(Math.random() * 3) + 3) * sign; // Offset +- 3 to 5
-                        distractor = correctCount + offset;
-                    } while (distractor < 1 || distractor > 10 || Math.abs(distractor - correctCount) < 3);
-                    break;
-                    
-                case 3: // Medium: 1-5. Distractor is close (difference of 1 or 2)
-                    do {
-                        const offset = (Math.floor(Math.random() * 2) + 1) * sign; // Offset +- 1 or 2
-                        distractor = correctCount + offset;
-                    } while (distractor < 1 || distractor > 5 || distractor === correctCount);
-                    break;
-                    
-                case 4: // Hard: 1-10. Distractor is distinct (difference >= 4)
-                    do {
-                        const offset = (Math.floor(Math.random() * 4) + 4) * sign; // Offset +- 4 to 7
-                        distractor = correctCount + offset;
-                    } while (distractor < 1 || distractor > 10 || Math.abs(distractor - correctCount) < 4);
-                    break;
-                    
-                case 5: // Super: 1-10. Distractor is extremely close (difference of 1 or 2)
-                    do {
-                        const offset = (Math.floor(Math.random() * 2) + 1) * sign; // Offset +- 1 or 2
-                        distractor = correctCount + offset;
-                    } while (distractor < 1 || distractor > 10 || distractor === correctCount);
-                    break;
+            for (let num = 1; num <= 10; num++) {
+                if (num === correctCount) continue;
+                
+                let isValid = false;
+                switch (level) {
+                    case 1: // Novice: 1-3. Distractor is completely far (4-10)
+                        isValid = (num >= 4 && num <= 10);
+                        break;
+                    case 2: // Easy: 1-5. Distractor is distinct (difference >= 3)
+                        isValid = (Math.abs(num - correctCount) >= 3 && num <= 10);
+                        break;
+                    case 3: // Medium: 1-5. Distractor is close (difference of 1 or 2)
+                        isValid = (Math.abs(num - correctCount) <= 2 && num <= 5);
+                        break;
+                    case 4: // Hard: 1-10. Distractor is distinct (difference >= 4)
+                        isValid = (Math.abs(num - correctCount) >= 4 && num <= 10);
+                        break;
+                    case 5: // Super: 1-10. Distractor is extremely close (difference of 1 or 2)
+                        isValid = (Math.abs(num - correctCount) <= 2 && num <= 10);
+                        break;
+                }
+                
+                if (isValid) {
+                    candidates.push(num);
+                }
             }
             
-            return distractor;
+            // If for some reason candidates is empty, fallback safely
+            if (candidates.length === 0) {
+                return correctCount === 1 ? 10 : 1;
+            }
+            
+            // Pick a random candidate from the pre-filtered valid choices list
+            return candidates[Math.floor(Math.random() * candidates.length)];
         }
 
         // --- Star Streak UI Render ---
