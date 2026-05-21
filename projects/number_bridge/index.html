@@ -100,15 +100,15 @@
 
         .streak-tracker {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             background-color: hsla(204, 50%, 90%, 0.8);
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 50px;
             border: 2px solid white;
         }
 
         .streak-star {
-            font-size: 1.6rem;
+            font-size: 1.3rem;
             color: hsl(204, 15%, 80%);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-shadow: 0 1px 1px rgba(0,0,0,0.05);
@@ -680,6 +680,13 @@
             .levelup-text {
                 font-size: 2.5rem;
             }
+            .streak-tracker {
+                gap: 4px;
+                padding: 4px 10px;
+            }
+            .streak-star {
+                font-size: 0.95rem;
+            }
         }
     </style>
 </head>
@@ -751,11 +758,16 @@
         <header>
             <div class="score-box" id="score-display">⭐ <span class="score-star" id="score-val">0</span></div>
             
-            <!-- Streak Tracker: 3 stars to Level Up -->
+            <!-- Streak Tracker: 8 stars to Level Up -->
             <div class="streak-tracker">
                 <span class="streak-star" id="streak-1">★</span>
                 <span class="streak-star" id="streak-2">★</span>
                 <span class="streak-star" id="streak-3">★</span>
+                <span class="streak-star" id="streak-4">★</span>
+                <span class="streak-star" id="streak-5">★</span>
+                <span class="streak-star" id="streak-6">★</span>
+                <span class="streak-star" id="streak-7">★</span>
+                <span class="streak-star" id="streak-8">★</span>
             </div>
             
             <!-- Safe Settings button with hidden progress ring -->
@@ -1047,7 +1059,7 @@
 
         // --- Star Streak UI Render ---
         function updateStreakStars() {
-            for (let i = 1; i <= 3; i++) {
+            for (let i = 1; i <= 8; i++) {
                 const star = document.getElementById(`streak-${i}`);
                 if (STATE.streak >= i) {
                     star.classList.add('active');
@@ -1174,7 +1186,7 @@
                 STATE.streak++;
                 updateStreakStars();
                 
-                if (STATE.streak >= 3) {
+                if (STATE.streak >= 8) {
                     streakLeveledUp = true;
                 }
             }
