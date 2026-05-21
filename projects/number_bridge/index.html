@@ -792,21 +792,53 @@
         // --- Core Configuration and Theme Data ---
         const THEMES = {
             dinosaurs: {
-                emojis: ['🦖', '🦕', '🐉', '🐲'],
-                names: ['dinosaur', 'dinosaurs']
+                emojis: ['🦖', '🦕', '🐉', '🐲']
             },
             vehicles: {
-                emojis: ['🚗', '🚂', '✈️', '🚀', '🚒', '🚜', '🛳️', '🚁'],
-                names: ['car or train', 'vehicles']
+                emojis: ['🚗', '🚂', '✈️', '🚀', '🚒', '🚜', '🛳️', '🚁']
             },
             animals: {
-                emojis: ['🐶', '🐱', '🐸', '🐨', '🦁', '🐵', '🐼', '🐰'],
-                names: ['animal', 'animals']
+                emojis: ['🐶', '🐱', '🐸', '🐨', '🦁', '🐵', '🐼', '🐰']
             },
             dots: {
-                emojis: ['🔴', '🔵', '🟡', '🟢', '🟣', '🟠'],
-                names: ['dot', 'dots']
+                emojis: ['🔴', '🔵', '🟡', '🟢', '🟣', '🟠']
             }
+        };
+
+        const EMOJI_NAMES = {
+            // Dinosaurs & Dragons
+            '🦖': ['dinosaur', 'dinosaurs'],
+            '🦕': ['dinosaur', 'dinosaurs'],
+            '🐉': ['dragon', 'dragons'],
+            '🐲': ['dragon', 'dragons'],
+            
+            // Vehicles
+            '🚗': ['car', 'cars'],
+            '🚂': ['train', 'trains'],
+            '✈️': ['plane', 'planes'],
+            '🚀': ['rocket', 'rockets'],
+            '🚒': ['fire engine', 'fire engines'],
+            '🚜': ['tractor', 'tractors'],
+            '🛳️': ['boat', 'boats'],
+            '🚁': ['helicopter', 'helicopters'],
+            
+            // Animals
+            '🐶': ['dog', 'dogs'],
+            '🐱': ['cat', 'cats'],
+            '🐸': ['frog', 'frogs'],
+            '🐨': ['koala', 'koalas'],
+            '🦁': ['lion', 'lions'],
+            '🐵': ['monkey', 'monkeys'],
+            '🐼': ['panda', 'pandas'],
+            '🐰': ['bunny', 'bunnies'],
+            
+            // Dots
+            '🔴': ['red dot', 'red dots'],
+            '🔵': ['blue dot', 'blue dots'],
+            '🟡': ['yellow dot', 'yellow dots'],
+            '🟢': ['green dot', 'green dots'],
+            '🟣': ['purple dot', 'purple dots'],
+            '🟠': ['orange dot', 'orange dots']
         };
 
         const STATE = {
@@ -1070,8 +1102,9 @@
             const selectedTheme = THEMES[themeKey];
             const randomEmoji = selectedTheme.emojis[Math.floor(Math.random() * selectedTheme.emojis.length)];
             
-            // Pluralization check for voice prompt
-            const nameString = STATE.correctCount === 1 ? selectedTheme.names[0] : selectedTheme.names[1];
+            // Resolve specific singular/plural name for this exact emoji
+            const emojiNamePair = EMOJI_NAMES[randomEmoji] || ['object', 'objects'];
+            const nameString = STATE.correctCount === 1 ? emojiNamePair[0] : emojiNamePair[1];
             
             // 6. Draw Slots inside Ten-Frame
             setupGrid();
@@ -1093,7 +1126,7 @@
             levelBadge.textContent = `Level ${STATE.currentLevel}`;
             
             // 7. Update header prompt text & announce via Speech Synthesis
-            promptText.textContent = `Can you find ${STATE.correctCount}?`;
+            promptText.textContent = `Can you find ${STATE.correctCount} ${nameString}?`;
             
             STATE.isWaitingInput = true;
             speechManager.speak(`Can you find ${STATE.correctCount} ${nameString}?`);
