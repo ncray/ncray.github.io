@@ -48,6 +48,39 @@ layout: home
       </div>
     </a>
 
+    <!-- Dinosaur Director Game -->
+    <a href="/projects/dino_director/" class="project-card">
+      <div class="card-accent" style="background: linear-gradient(135deg, #ff7e5f, #feb47b);"></div>
+      <div class="project-info">
+        <span class="project-tag">AAC Game</span>
+        <h3 class="project-name">🦖 Dinosaur Director</h3>
+        <p class="project-desc">An interactive speech-generating device emulator featuring animated cartoon dinosaurs (T-Rex, Triceratops, Brachio) to boost multi-word communication.</p>
+        <span class="project-btn">Play Now →</span>
+      </div>
+    </a>
+
+    <!-- Dynamic Inset Puzzles -->
+    <a href="/projects/inset_puzzles/" class="project-card">
+      <div class="card-accent" style="background: linear-gradient(135deg, #b39ddb, #7e57c2);"></div>
+      <div class="project-info">
+        <span class="project-tag">Visual-Motor Game</span>
+        <h3 class="project-name">🧩 Inset Puzzles</h3>
+        <p class="project-desc">High-contrast silhouette puzzles (Fire Engine, Playground, Outer Space) designed with unified touch drag-and-drop and magnetic snapping.</p>
+        <span class="project-btn">Play Now →</span>
+      </div>
+    </a>
+
+    <!-- Where is Donald Duck? -->
+    <a href="/projects/where_donald/" class="project-card">
+      <div class="card-accent" style="background: linear-gradient(135deg, #4fc3f7, #0288d1);"></div>
+      <div class="project-info">
+        <span class="project-tag">Language Game</span>
+        <h3 class="project-name">🦆 Where is Donald?</h3>
+        <p class="project-desc">A receptive language preposition game featuring cartoon buddies Donald Duck and Goofy in clean, distraction-free spatial matching levels.</p>
+        <span class="project-btn">Play Now →</span>
+      </div>
+    </a>
+
     <!-- Personal Board of Directors -->
     <a href="/projects/personal_bod?num-members=3&user-query=Should+I+invade+Westeros%3F&member-name-1=Tyrion+Lannister&member-name-2=Melisandre&member-name-3=Jorah+Mormont" class="project-card">
       <div class="card-accent" style="background: linear-gradient(135deg, #fc00ff, #00dbde);"></div>

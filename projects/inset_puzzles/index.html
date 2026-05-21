@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dynamic Inset Puzzles - Visual Motor Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-color: hsl(270, 60%, 97%);       /* Soft pastel lavender */
+            --primary: hsl(275, 75%, 45%);        /* Deep friendly violet */
+            --secondary: hsl(160, 75%, 35%);      /* Encouraging mint green */
+            --yellow: hsl(40, 100%, 55%);         /* Warm gold yellow */
+            --pink: hsl(330, 90%, 65%);           /* Happy accent pink */
+            --text-color: hsl(270, 30%, 20%);     /* Soft dark purple, no harsh black */
+            --slate: hsl(200, 15%, 40%);
+            
+            --border-radius: 28px;
+            --font-family: 'Fredoka', sans-serif;
+            
+            --canvas-bg: hsl(270, 30%, 93%);
+            --shelf-bg: hsl(270, 20%, 90%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: none; /* Crucial: prevent browser scrolling while dragging */
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(hsl(270, 50%, 92%) 2px, transparent 2px);
+            background-size: 36px 36px;
+            font-family: var(--font-family);
+            color: var(--text-color);
+        }
+
+        #app-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 16px 24px 24px 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* --- Header Section --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            z-index: 10;
+        }
+
+        .score-box {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--yellow);
+            text-shadow: 2px 2px 0px hsl(40, 100%, 35%);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .score-star {
+            display: inline-block;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .score-star.pop {
+            transform: scale(1.3) rotate(15deg);
+        }
+
+        .streak-tracker {
+            display: flex;
+            gap: 6px;
+            background-color: hsla(270, 40%, 90%, 0.8);
+            padding: 6px 12px;
+            border-radius: 50px;
+            border: 2px solid white;
+        }
+
+        .streak-star {
+            font-size: 1.3rem;
+            color: hsl(270, 15%, 80%);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .streak-star.active {
+            color: var(--yellow);
+            text-shadow: 1px 2px 0px hsl(40, 100%, 35%);
+            transform: scale(1.2);
+        }
+
+        /* Settings Button */
+        .settings-btn-trigger {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: hsla(270, 20%, 80%, 0.4);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        
+        .settings-btn-trigger svg {
+            width: 24px;
+            height: 24px;
+            fill: hsl(270, 20%, 50%);
+            transition: transform 0.5s ease;
+            pointer-events: none;
+        }
+
+        .settings-progress-ring {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 3px solid var(--pink);
+            border-color: var(--pink) transparent transparent transparent;
+            opacity: 0;
+            transform: rotate(0deg);
+            pointer-events: none;
+        }
+        
+        .settings-btn-trigger.holding .settings-progress-ring {
+            opacity: 1;
+            animation: spinProgress 2s linear forwards;
+        }
+        
+        @keyframes spinProgress {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- Main Work Arena --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            gap: 12px;
+            position: relative;
+        }
+
+        #level-badge {
+            background-color: var(--pink);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 50px;
+            box-shadow: 0 4px 0 hsl(330, 90%, 50%);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        #prompt-text {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            text-align: center;
+            min-height: 40px;
+        }
+
+        /* --- Puzzle Arena Container (Split Layout) --- */
+        #puzzle-container {
+            display: flex;
+            width: 100%;
+            height: 380px;
+            max-width: 900px;
+            background: white;
+            border-radius: 36px;
+            padding: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05), inset 0 -6px 0 hsl(270, 20%, 90%);
+            border: 4px solid white;
+            gap: 16px;
+        }
+
+        /* Left Canvas: Holds silhouette templates */
+        #puzzle-canvas {
+            flex: 2;
+            height: 100%;
+            background-color: var(--canvas-bg);
+            border-radius: 24px;
+            border: 3px dashed hsl(270, 25%, 85%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Right Shelf: Shelves draggable pieces */
+        #puzzle-shelf {
+            flex: 1;
+            height: 100%;
+            background-color: var(--shelf-bg);
+            border-radius: 24px;
+            border: 3px solid white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px;
+            position: relative;
+        }
+
+        /* Draggable Piece styles */
+        .puzzle-piece {
+            width: 85px;
+            height: 85px;
+            cursor: grab;
+            position: absolute;
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            filter: drop-shadow(0 6px 8px rgba(0,0,0,0.15));
+            touch-action: none;
+            transition: filter 0.2s, scale 0.2s;
+        }
+
+        .puzzle-piece:active {
+            cursor: grabbing;
+            scale: 1.1;
+            filter: drop-shadow(0 12px 16px rgba(0,0,0,0.22));
+            z-index: 30;
+        }
+
+        /* Silhouette Slot styles */
+        .puzzle-slot {
+            width: 85px;
+            height: 85px;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0.8;
+        }
+
+        /* Magnet snapping pulse ring */
+        .snap-radar {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            right: -15px;
+            bottom: -15px;
+            border: 4px solid var(--secondary);
+            border-radius: 50%;
+            opacity: 0;
+            transform: scale(0.6);
+            pointer-events: none;
+        }
+
+        .snap-radar.animate {
+            animation: radarPulse 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes radarPulse {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+
+        /* Gliding animation for returning home */
+        .returning-home {
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Locked / Snapped correct state */
+        .snapped {
+            pointer-events: none !important;
+            cursor: default !important;
+            filter: none !important;
+            scale: 1 !important;
+            transition: transform 0.2s ease-out;
+        }
+
+        /* SVG Paths and Color Themes */
+        .outline-shape {
+            fill: #9c27b0;
+            stroke: white;
+            stroke-width: 2.5;
+        }
+
+        .silhouette-shape {
+            fill: hsl(270, 15%, 82%);
+            stroke: hsl(270, 15%, 72%);
+            stroke-width: 3;
+            stroke-dasharray: 4 4;
+        }
+
+        /* --- Full Screen Welcome Overlay --- */
+        #welcome-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            z-index: 100;
+            padding: 30px;
+            text-align: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        #welcome-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .welcome-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 3px 3px 0px white, 5px 5px 0px rgba(0, 0, 0, 0.05);
+        }
+
+        .welcome-description {
+            font-size: 1.6rem;
+            max-width: 500px;
+            color: var(--text-color);
+            line-height: 1.4;
+        }
+
+        .play-btn {
+            font-family: var(--font-family);
+            font-size: 3rem;
+            font-weight: 700;
+            color: white;
+            background-color: var(--secondary);
+            border: none;
+            padding: 24px 70px;
+            border-radius: 60px;
+            box-shadow: 0 14px 0 hsl(160, 75%, 25%), 0 20px 30px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .play-btn:active {
+            transform: translateY(10px);
+            box-shadow: 0 4px 0 hsl(160, 75%, 25%), 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- Parent Dashboard Modal --- */
+        #settings-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #settings-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            width: 90%;
+            max-width: 520px;
+            background: white;
+            border-radius: 36px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+            border: 4px solid var(--primary);
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 2.2rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .setting-section {
+            margin-bottom: 24px;
+            border-bottom: 2px dashed hsl(270, 20%, 90%);
+            padding-bottom: 20px;
+        }
+        
+        .setting-section:last-of-type {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .setting-label {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .setting-option-btn {
+            flex: 1;
+            min-width: 70px;
+            font-family: var(--font-family);
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 10px 14px;
+            border-radius: 16px;
+            border: 2px solid hsl(270, 20%, 85%);
+            background-color: hsl(270, 30%, 97%);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .setting-option-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 8px rgba(156, 39, 176, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .setting-toggle-btn {
+            width: 100%;
+            font-family: var(--font-family);
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 12px;
+            border-radius: 16px;
+            border: 2px solid hsl(270, 20%, 85%);
+            background-color: hsl(270, 30%, 97%);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        
+        .setting-toggle-btn.enabled {
+            background-color: hsla(160, 75%, 45%, 0.15);
+            border-color: var(--secondary);
+            color: var(--secondary);
+        }
+
+        .setting-toggle-indicator {
+            width: 48px;
+            height: 26px;
+            background-color: hsl(270, 10%, 80%);
+            border-radius: 50px;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+        
+        .setting-toggle-indicator::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            transition: transform 0.2s;
+        }
+        
+        .setting-toggle-btn.enabled .setting-toggle-indicator {
+            background-color: var(--secondary);
+        }
+        
+        .setting-toggle-btn.enabled .setting-toggle-indicator::after {
+            transform: translateX(22px);
+        }
+
+        .modal-close-btn {
+            width: 100%;
+            font-family: var(--font-family);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            background-color: var(--secondary);
+            border: none;
+            padding: 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 hsl(160, 75%, 20%), 0 8px 15px rgba(0,0,0,0.15);
+            transition: transform 0.1s;
+            margin-top: 10px;
+        }
+
+        .modal-close-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 hsl(160, 75%, 20%), 0 2px 5px rgba(0,0,0,0.15);
+        }
+
+        /* --- Level-Up Celebration Overlay --- */
+        #levelup-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        
+        #levelup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .levelup-badge-giant {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: white;
+            background-color: var(--pink);
+            padding: 10px 24px;
+            border-radius: 50px;
+            box-shadow: 0 6px 0 hsl(330, 90%, 50%);
+            margin-bottom: 20px;
+            animation: levelUpBounce 0.8s infinite alternate;
+        }
+
+        .levelup-text {
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--secondary);
+            text-shadow: 2px 4px 0px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        
+        @keyframes levelUpBounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-15px); }
+        }
+
+        /* --- Responsive Styles for Smaller Screen Heights --- */
+        @media (max-width: 600px) {
+            #app-container {
+                padding: 10px 12px 12px 12px;
+            }
+            #prompt-text {
+                font-size: 1.5rem;
+            }
+            #puzzle-container {
+                height: 310px;
+                padding: 8px;
+                border-radius: 24px;
+                gap: 8px;
+            }
+            #puzzle-canvas {
+                border-radius: 16px;
+            }
+            #puzzle-shelf {
+                border-radius: 16px;
+                padding: 4px;
+            }
+            .puzzle-piece, .puzzle-slot {
+                width: 60px;
+                height: 60px;
+            }
+            .welcome-title {
+                font-size: 2.2rem;
+            }
+            .welcome-description {
+                font-size: 1.1rem;
+            }
+            .play-btn {
+                font-size: 2rem;
+                padding: 16px 40px;
+            }
+            .levelup-text {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Start Overlay -->
+    <div id="welcome-overlay">
+        <h1 class="welcome-title">Dynamic Inset Puzzles 🧩</h1>
+        <p class="welcome-description">Hi Caleb! Drag the matching shapes to complete the playground, fire engine, or rocket!</p>
+        <button class="play-btn" id="welcome-play-btn">Play 🚀</button>
+    </div>
+
+    <!-- Hidden Settings Dashboard (Parent Lock: 2s hold) -->
+    <div id="settings-modal">
+        <div class="modal-card">
+            <h2 class="modal-title">⚙️ Parent Dashboard</h2>
+            
+            <!-- Manual Level -->
+            <div class="setting-section">
+                <span class="setting-label">Manually Set Level</span>
+                <div class="btn-group">
+                    <button class="setting-option-btn" data-level="1">Level 1<br><small>2 Pieces (Easy)</small></button>
+                    <button class="setting-option-btn" data-level="2">Level 2<br><small>3 Pieces (Med)</small></button>
+                    <button class="setting-option-btn" data-level="3">Level 3<br><small>4 Pieces (Hard)</small></button>
+                </div>
+            </div>
+
+            <!-- Scene Selection -->
+            <div class="setting-section">
+                <span class="setting-label">Active Scene</span>
+                <div class="btn-group">
+                    <button class="setting-option-btn" data-scene="fire_station">🚒 Fire Station</button>
+                    <button class="setting-option-btn" data-scene="playground">🛝 Playground</button>
+                    <button class="setting-option-btn" data-scene="space">🚀 Rocket Space</button>
+                </div>
+            </div>
+
+            <!-- Audio Settings -->
+            <div class="setting-section">
+                <span class="setting-label">Audio Settings</span>
+                <button class="setting-toggle-btn enabled" id="toggle-sound">
+                    Sound Effects (Chimes)
+                    <div class="setting-toggle-indicator"></div>
+                </button>
+                <button class="setting-toggle-btn enabled" id="toggle-speech">
+                    Voice Prompts (Speech)
+                    <div class="setting-toggle-indicator"></div>
+                </button>
+            </div>
+
+            <button class="modal-close-btn" id="modal-close-btn">Done 🌟</button>
+        </div>
+    </div>
+
+    <!-- Level-Up Modal -->
+    <div id="levelup-overlay">
+        <div class="levelup-badge-giant" id="levelup-badge-text">Level 2!</div>
+        <div class="levelup-text">Puzzle Champion! 🎉</div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app-container">
+        
+        <header>
+            <div class="score-box" id="score-display">⭐ <span class="score-star" id="score-val">0</span></div>
+            
+            <div class="streak-tracker">
+                <span class="streak-star" id="streak-1">★</span>
+                <span class="streak-star" id="streak-2">★</span>
+                <span class="streak-star" id="streak-3">★</span>
+                <span class="streak-star" id="streak-4">★</span>
+                <span class="streak-star" id="streak-5">★</span>
+                <span class="streak-star" id="streak-6">★</span>
+                <span class="streak-star" id="streak-7">★</span>
+                <span class="streak-star" id="streak-8">★</span>
+            </div>
+            
+            <div class="settings-btn-trigger" id="settings-trigger">
+                <div class="settings-progress-ring"></div>
+                <svg viewBox="0 0 24 24">
+                    <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.04,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                </svg>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main>
+            <div id="level-badge">Level 1</div>
+            <h1 id="prompt-text">Drag the shapes to their spots!</h1>
+            
+            <div id="puzzle-container">
+                <!-- Left Outline Canvas -->
+                <div id="puzzle-canvas">
+                    <!-- Target templates will be dynamically generated by JS -->
+                </div>
+
+                <!-- Right Shelf for source pieces -->
+                <div id="puzzle-shelf">
+                    <!-- Interactive puzzle pieces will live here -->
+                </div>
+            </div>
+        </main>
+        
+    </div>
+
+    <script>
+        // --- Game Setup Data for Shapes & Scenes ---
+        const PUZZLE_DATA = {
+            geometric: { // Level 1 default
+                prompt: "Find the matching puzzle shapes!",
+                pieces: [
+                    { id: 'geo_circle', name: 'Circle', emoji: '🔴', path: `<circle cx="25" cy="25" r="22" class="outline-shape" fill="hsl(0, 85%, 60%)" />`, pathSil: `<circle cx="25" cy="25" r="22" class="silhouette-shape" />` },
+                    { id: 'geo_square', name: 'Square', emoji: '🟦', path: `<rect x="5" y="5" width="40" height="40" rx="6" class="outline-shape" fill="hsl(210, 85%, 55%)" />`, pathSil: `<rect x="5" y="5" width="40" height="40" rx="6" class="silhouette-shape" />` },
+                    { id: 'geo_triangle', name: 'Triangle', emoji: '🔺', path: `<polygon points="25,4 46,44 4,44" class="outline-shape" fill="hsl(120, 75%, 45%)" />`, pathSil: `<polygon points="25,4 46,44 4,44" class="silhouette-shape" />` }
+                ]
+            },
+            fire_station: {
+                prompt: "Let's complete the Fire Engine!",
+                pieces: [
+                    { id: 'fire_wheel', name: 'Tire', emoji: '🛞', path: `<circle cx="25" cy="25" r="20" class="outline-shape" fill="hsl(0, 0%, 25%)" /><circle cx="25" cy="25" r="8" fill="silver" />`, pathSil: `<circle cx="25" cy="25" r="20" class="silhouette-shape" />` },
+                    { id: 'fire_ladder', name: 'Ladder', emoji: '🪜', path: `<rect x="10" y="5" width="30" height="40" fill="transparent" stroke="silver" stroke-width="4"/><line x1="10" y1="15" x2="40" y2="15" stroke="silver" stroke-width="4"/><line x1="10" y1="25" x2="40" y2="25" stroke="silver" stroke-width="4"/><line x1="10" y1="35" x2="40" y2="35" stroke="silver" stroke-width="4"/>`, pathSil: `<rect x="10" y="5" width="30" height="40" class="silhouette-shape" />` },
+                    { id: 'fire_hydrant', name: 'Hydrant', emoji: '🚨', path: `<path d="M12,40 L38,40 L38,20 C38,10 12,10 12,20 Z" class="outline-shape" fill="red"/><rect x="8" y="36" width="34" height="6" fill="silver"/><circle cx="25" cy="22" r="4" fill="yellow"/>`, pathSil: `<path d="M12,40 L38,40 L38,20 C38,10 12,10 12,20 Z" class="silhouette-shape" />` },
+                    { id: 'fire_star', name: 'Badge Star', emoji: '⭐', path: `<polygon points="25,3 31,18 47,18 34,28 39,44 25,34 11,44 16,28 3,18 19,18" class="outline-shape" fill="gold"/>`, pathSil: `<polygon points="25,3 31,18 47,18 34,28 39,44 25,34 11,44 16,28 3,18 19,18" class="silhouette-shape" />` }
+                ]
+            },
+            playground: {
+                prompt: "Let's build the Playground!",
+                pieces: [
+                    { id: 'play_ball', name: 'Beach Ball', emoji: '⚽', path: `<circle cx="25" cy="25" r="22" class="outline-shape" fill="hsl(200, 90%, 50%)" /><path d="M12,12 Q25,25 38,38" stroke="white" stroke-width="4"/><path d="M38,12 Q25,25 12,38" stroke="white" stroke-width="4"/>`, pathSil: `<circle cx="25" cy="25" r="22" class="silhouette-shape" />` },
+                    { id: 'play_slide', name: 'Slide Triangle', emoji: '🛝', path: `<polygon points="5,42 45,42 45,8" class="outline-shape" fill="orange" />`, pathSil: `<polygon points="5,42 45,42 45,8" class="silhouette-shape" />` },
+                    { id: 'play_seat', name: 'Swing seat', emoji: '🪵', path: `<rect x="5" y="16" width="40" height="15" rx="4" class="outline-shape" fill="brown" /><line x1="12" y1="2" x2="12" y2="16" stroke="silver" stroke-width="3"/><line x1="38" y1="2" x2="38" y2="16" stroke="silver" stroke-width="3"/>`, pathSil: `<rect x="5" y="16" width="40" height="15" rx="4" class="silhouette-shape" />` },
+                    { id: 'play_balloon', name: 'Balloon', emoji: '🎈', path: `<circle cx="25" cy="18" r="15" class="outline-shape" fill="crimson"/><path d="M25,33 L25,48" stroke="grey" stroke-width="2"/>`, pathSil: `<circle cx="25" cy="18" r="15" class="silhouette-shape" />` }
+                ]
+            },
+            space: {
+                prompt: "Let's launch the Rocket!",
+                pieces: [
+                    { id: 'space_cone', name: 'Nose Cone', emoji: '🚀', path: `<path d="M25,5 C38,20 38,45 25,45 C12,45 12,20 25,5 Z" class="outline-shape" fill="red"/>`, pathSil: `<path d="M25,5 C38,20 38,45 25,45 C12,45 12,20 25,5 Z" class="silhouette-shape" />` },
+                    { id: 'space_wing', name: 'Fins', emoji: '🛸', path: `<polygon points="5,42 45,42 25,12" class="outline-shape" fill="cyan" />`, pathSil: `<polygon points="5,42 45,42 25,12" class="silhouette-shape" />` },
+                    { id: 'space_moon', name: 'Crescent Moon', emoji: '🌙', path: `<path d="M12,12 A18,18 0 1 0 38,38 A14,14 0 1 1 12,12 Z" class="outline-shape" fill="gold" />`, pathSil: `<path d="M12,12 A18,18 0 1 0 38,38 A14,14 0 1 1 12,12 Z" class="silhouette-shape" />` },
+                    { id: 'space_star', name: 'Shiny Star', emoji: '⭐', path: `<polygon points="25,3 31,18 47,18 34,28 39,44 25,34 11,44 16,28 3,18 19,18" class="outline-shape" fill="yellow"/>`, pathSil: `<polygon points="25,3 31,18 47,18 34,28 39,44 25,34 11,44 16,28 3,18 19,18" class="silhouette-shape" />` }
+                ]
+            }
+        };
+
+        const STATE = {
+            score: 0,
+            streak: 0,
+            currentLevel: 1, // 1: 2 pieces, 2: 3 pieces, 3: 4 pieces
+            currentScene: 'fire_station',
+            soundEnabled: true,
+            speechEnabled: true,
+            activeDrag: null
+        };
+
+        // --- DOM Elements ---
+        const welcomeOverlay = document.getElementById('welcome-overlay');
+        const welcomePlayBtn = document.getElementById('welcome-play-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsTrigger = document.getElementById('settings-trigger');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        
+        const scoreVal = document.getElementById('score-val');
+        const levelBadge = document.getElementById('level-badge');
+        const promptText = document.getElementById('prompt-text');
+        
+        const puzzleCanvas = document.getElementById('puzzle-canvas');
+        const puzzleShelf = document.getElementById('puzzle-shelf');
+
+        const toggleSoundBtn = document.getElementById('toggle-sound');
+        const toggleSpeechBtn = document.getElementById('toggle-speech');
+        
+        const levelupOverlay = document.getElementById('levelup-overlay');
+        const levelupBadgeText = document.getElementById('levelup-badge-text');
+
+        // --- Custom Audio Synthesizer ---
+        class WebAudioSynth {
+            constructor() { this.ctx = null; }
+            init() {
+                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+            }
+            playTone(freq, type, duration, delay = 0, volume = 0.15) {
+                if (!STATE.soundEnabled) return;
+                this.init();
+                setTimeout(() => {
+                    const osc = this.ctx.createOscillator();
+                    const gainNode = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gainNode);
+                    gainNode.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                }, delay * 1000);
+            }
+            playSnap() {
+                // High-quality woodblock percussion chime
+                this.playTone(330, 'triangle', 0.15, 0.0, 0.25);
+                this.playTone(440, 'sine', 0.18, 0.04, 0.22);
+            }
+            playSuccess() {
+                this.playTone(523.25, 'triangle', 0.5, 0.0, 0.18);
+                this.playTone(659.25, 'triangle', 0.5, 0.08, 0.18);
+                this.playTone(783.99, 'triangle', 0.5, 0.16, 0.18);
+                this.playTone(1046.50, 'triangle', 0.6, 0.24, 0.18);
+            }
+            playIncorrect() {
+                // Smooth whoosh down for returning shapes
+                this.playTone(280.00, 'sine', 0.35, 0.0, 0.15);
+                this.playTone(180.00, 'sine', 0.35, 0.08, 0.15);
+            }
+            playLevelUp() {
+                const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50];
+                notes.forEach((freq, idx) => {
+                    this.playTone(freq, 'triangle', 0.4, idx * 0.08, 0.15);
+                });
+            }
+        }
+        const audioSynth = new WebAudioSynth();
+
+        // --- Custom Speech Synthesizer ---
+        const speechManager = {
+            synth: window.speechSynthesis,
+            voices: [],
+            activeUtterances: new Set(),
+            init() {
+                if (!this.synth) return;
+                this.voices = this.synth.getVoices();
+                if (speechSynthesis.onvoiceschanged !== undefined) {
+                    speechSynthesis.onvoiceschanged = () => {
+                        this.voices = this.synth.getVoices();
+                    };
+                }
+            },
+            speak(text, callback = null) {
+                if (!STATE.speechEnabled) {
+                    if (callback) callback();
+                    return;
+                }
+                if (!this.synth) {
+                    if (callback) callback();
+                    return;
+                }
+                try {
+                    if (this.synth.speaking) this.synth.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.pitch = 1.35;
+                    utterance.rate = 0.85;
+                    const preferredVoice = this.voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Samantha')));
+                    if (preferredVoice) utterance.voice = preferredVoice;
+                    this.activeUtterances.add(utterance);
+                    const cleanUp = () => {
+                        this.activeUtterances.delete(utterance);
+                        if (callback) callback();
+                    };
+                    utterance.onend = cleanUp;
+                    utterance.onerror = cleanUp;
+                    this.synth.speak(utterance);
+                } catch (e) {
+                    console.warn("Speech Synthesis error:", e);
+                    if (callback) callback();
+                }
+            }
+        };
+        speechManager.init();
+
+        // --- Setup and Render Puzzle Boards ---
+        function updateStreakStars() {
+            for (let i = 1; i <= 8; i++) {
+                const star = document.getElementById(`streak-${i}`);
+                if (STATE.streak >= i) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            }
+        }
+
+        // Scene Visual SVGs representing background artwork outlines
+        const SCENE_ART = {
+            fire_station: `<svg width="100%" height="100%" viewBox="0 0 400 300" opacity="0.3" style="position:absolute; top:0; left:0; z-index:0;">
+                <rect x="0" y="0" width="400" height="300" fill="hsl(0, 40%, 94%)"/>
+                <!-- Garage structure -->
+                <rect x="30" y="40" width="340" height="240" rx="10" fill="none" stroke="red" stroke-width="4"/>
+                <path d="M 50,40 L 50,280 M 350,40 L 350,280 M 30,120 L 370,120" stroke="red" stroke-width="2"/>
+                <!-- Fire truck body base -->
+                <rect x="90" y="150" width="220" height="80" rx="8" fill="none" stroke="darkred" stroke-width="3" stroke-dasharray="6 4"/>
+                <rect x="230" y="120" width="70" height="40" rx="6" fill="none" stroke="darkred" stroke-width="3"/>
+            </svg>`,
+            playground: `<svg width="100%" height="100%" viewBox="0 0 400 300" opacity="0.3" style="position:absolute; top:0; left:0; z-index:0;">
+                <rect x="0" y="0" width="400" height="300" fill="hsl(140, 40%, 94%)"/>
+                <!-- Sun and Clouds -->
+                <circle cx="340" cy="50" r="20" fill="none" stroke="gold" stroke-width="4"/>
+                <!-- Grass & Hills -->
+                <path d="M 0,260 Q 150,220 400,260 L 400,300 L 0,300 Z" fill="none" stroke="forestgreen" stroke-width="4"/>
+                <!-- Swing A-Frame structure -->
+                <line x1="60" y1="90" x2="30" y2="250" stroke="hsl(28, 50%, 45%)" stroke-width="4"/>
+                <line x1="60" y1="90" x2="90" y2="250" stroke="hsl(28, 50%, 45%)" stroke-width="4"/>
+                <line x1="60" y1="90" x2="220" y2="90" stroke="hsl(28, 50%, 45%)" stroke-width="4"/>
+                <line x1="220" y1="90" x2="190" y2="250" stroke="hsl(28, 50%, 45%)" stroke-width="4"/>
+                <line x1="220" y1="90" x2="250" y2="250" stroke="hsl(28, 50%, 45%)" stroke-width="4"/>
+            </svg>`,
+            space: `<svg width="100%" height="100%" viewBox="0 0 400 300" opacity="0.3" style="position:absolute; top:0; left:0; z-index:0;">
+                <rect x="0" y="0" width="400" height="300" fill="hsl(220, 50%, 94%)"/>
+                <!-- Planet circles -->
+                <circle cx="310" cy="80" r="28" fill="none" stroke="darkblue" stroke-width="3"/>
+                <ellipse cx="310" cy="80" rx="40" ry="8" fill="none" stroke="darkblue" stroke-width="2"/>
+                <!-- Rocket main structure -->
+                <rect x="160" y="90" width="80" height="150" rx="40" fill="none" stroke="darkblue" stroke-width="4"/>
+            </svg>`
+        };
+
+        function loadNewRound() {
+            puzzleCanvas.innerHTML = '';
+            puzzleShelf.innerHTML = '';
+            
+            levelBadge.textContent = `Level ${STATE.currentLevel}`;
+            updateStreakStars();
+
+            // 1. Pick Active Theme base
+            let themeKey = STATE.currentScene;
+            if (STATE.currentLevel === 1) {
+                themeKey = 'geometric'; // Simple shape layouts for Caleb's level 1
+            }
+            
+            const activeTheme = PUZZLE_DATA[themeKey];
+            
+            // 2. Generate scene outline background
+            if (themeKey !== 'geometric') {
+                puzzleCanvas.innerHTML = SCENE_ART[themeKey] || '';
+            } else {
+                puzzleCanvas.innerHTML = `<rect x="0" y="0" width="100%" height="100%" fill="hsl(270, 30%, 95%)"/>`;
+            }
+
+            // 3. Select items depending on level requirements
+            // Level 1: 2 pieces; Level 2: 3 pieces; Level 3: 4 pieces
+            let pieceCount = 2;
+            if (STATE.currentLevel === 2) pieceCount = 3;
+            if (STATE.currentLevel === 3) pieceCount = Math.min(4, activeTheme.pieces.length);
+            
+            // Settle target coordinate slots inside left canvas
+            // Let's hardcode neat layout offsets so they don't overlap
+            const canvasWidth = puzzleCanvas.clientWidth || 550;
+            const canvasHeight = puzzleCanvas.clientHeight || 340;
+            const size = (window.innerWidth <= 600) ? 60 : 85;
+
+            const coordinateSlots = [
+                { x: canvasWidth * 0.2, y: canvasHeight * 0.25 },
+                { x: canvasWidth * 0.55, y: canvasHeight * 0.25 },
+                { x: canvasWidth * 0.35, y: canvasHeight * 0.58 },
+                { x: canvasWidth * 0.7, y: canvasHeight * 0.58 }
+            ];
+
+            const roundPieces = activeTheme.pieces.slice(0, pieceCount);
+            
+            // 4. Inject Silhouette Slots inside Canvas
+            roundPieces.forEach((p, idx) => {
+                const slot = document.createElement('div');
+                slot.className = 'puzzle-slot';
+                slot.id = `slot_${p.id}`;
+                
+                // Position slots
+                const coords = coordinateSlots[idx];
+                slot.style.left = `${coords.x}px`;
+                slot.style.top = `${coords.y}px`;
+                
+                // Create SVG content
+                slot.innerHTML = `
+                    <div class="snap-radar" id="radar_${p.id}"></div>
+                    <svg viewBox="0 0 50 50" width="100%" height="100%">
+                        ${p.pathSil}
+                    </svg>
+                `;
+                puzzleCanvas.appendChild(slot);
+            });
+
+            // 5. Inject Draggable pieces randomly on the shelf
+            // Scramble order
+            const scrambled = [...roundPieces].sort(() => Math.random() - 0.5);
+            
+            const shelfWidth = puzzleShelf.clientWidth || 250;
+            const shelfHeight = puzzleShelf.clientHeight || 340;
+            
+            scrambled.forEach((p, idx) => {
+                const piece = document.createElement('div');
+                piece.className = 'puzzle-piece';
+                piece.id = `piece_${p.id}`;
+                piece.dataset.pieceId = p.id;
+                
+                // Position piece inside shelf space
+                // Align them in a nice column stack
+                const shelfY = (shelfHeight / pieceCount) * (idx + 0.5) - (size / 2);
+                const shelfX = (shelfWidth / 2) - (size / 2);
+                
+                piece.style.left = `${shelfX}px`;
+                piece.style.top = `${shelfY}px`;
+                
+                // Cache home location for snaps and glides
+                piece.dataset.homeX = `${shelfX}px`;
+                piece.dataset.homeY = `${shelfY}px`;
+
+                piece.innerHTML = `
+                    <svg viewBox="0 0 50 50" width="100%" height="100%">
+                        ${p.path}
+                    </svg>
+                `;
+                
+                puzzleShelf.appendChild(piece);
+                bindPointerDragging(piece);
+            });
+
+            // 6. Voice prompt intro
+            const promptStr = activeTheme.prompt;
+            promptText.textContent = promptStr;
+            speechManager.speak(promptStr);
+        }
+
+        // --- Core Unified Pointer Event Drag-and-Drop Controller ---
+        function bindPointerDragging(el) {
+            let startX = 0, startY = 0;
+            let currentX = 0, currentY = 0;
+            let isDragging = false;
+
+            // Get absolute screen offset of the puzzle shelf to map coordinate boundaries accurately
+            let shelfRect = puzzleShelf.getBoundingClientRect();
+
+            el.addEventListener('pointerdown', e => {
+                if (el.classList.contains('snapped')) return;
+                el.setPointerCapture(e.pointerId);
+                
+                isDragging = true;
+                el.classList.remove('returning-home');
+                
+                shelfRect = puzzleShelf.getBoundingClientRect();
+                
+                // Find initial drag anchor
+                const transform = getTranslateValues(el);
+                startX = e.clientX - transform.x;
+                startY = e.clientY - transform.y;
+            });
+
+            el.addEventListener('pointermove', e => {
+                if (!isDragging) return;
+                
+                currentX = e.clientX - startX;
+                currentY = e.clientY - startY;
+                
+                // Hardware accelerated 3D transform for fluid dragging
+                el.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+            });
+
+            el.addEventListener('pointerup', e => {
+                if (!isDragging) return;
+                isDragging = false;
+                el.releasePointerCapture(e.pointerId);
+                
+                // Check snapping triggers
+                validateSnapping(el);
+            });
+
+            el.addEventListener('pointercancel', e => {
+                if (!isDragging) return;
+                isDragging = false;
+                returnHome(el);
+            });
+        }
+
+        // Utility to fetch numeric transforms
+        function getTranslateValues(el) {
+            const style = window.getComputedStyle(el);
+            const matrix = style.transform || style.webkitTransform;
+            if (matrix === 'none' || !matrix) {
+                return { x: 0, y: 0 };
+            }
+            const matrixType = matrix.includes('3d') ? '3d' : '2d';
+            const matrixValues = matrix.match(/matrix.*\((.+)\)/)[1].split(', ');
+            if (matrixType === '2d') {
+                return { x: parseFloat(matrixValues[4]), y: parseFloat(matrixValues[5]) };
+            }
+            return { x: parseFloat(matrixValues[12]), y: parseFloat(matrixValues[13]) };
+        }
+
+        // Validate magnet-pull snapping thresholds (generous 20% margin / ~60px)
+        function validateSnapping(pieceEl) {
+            const pieceId = pieceEl.dataset.pieceId;
+            const slotEl = document.getElementById(`slot_${pieceId}`);
+            if (!slotEl) return returnHome(pieceEl);
+
+            const pieceRect = pieceEl.getBoundingClientRect();
+            const slotRect = slotEl.getBoundingClientRect();
+
+            // Calculate center points
+            const pieceCenter = {
+                x: pieceRect.left + pieceRect.width / 2,
+                y: pieceRect.top + pieceRect.height / 2
+            };
+            const slotCenter = {
+                x: slotRect.left + slotRect.width / 2,
+                y: slotRect.top + slotRect.height / 2
+            };
+
+            const dx = pieceCenter.x - slotCenter.x;
+            const dy = pieceCenter.y - slotCenter.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Generous snap margin: 60px
+            const snapThreshold = (window.innerWidth <= 600) ? 45 : 65;
+
+            if (distance < snapThreshold) {
+                snapPieceToSlot(pieceEl, slotEl, slotRect);
+            } else {
+                returnHome(pieceEl);
+            }
+        }
+
+        // Smoothly glide piece into correct slot coordinate mapping
+        function snapPieceToSlot(pieceEl, slotEl, slotRect) {
+            pieceEl.classList.add('snapped');
+            
+            // Stop drag offset tracking and align directly inside puzzle canvas
+            // Get coordinates of slot relative to shelf container
+            const canvasRect = puzzleCanvas.getBoundingClientRect();
+            
+            const targetX = slotRect.left - canvasRect.left;
+            const targetY = slotRect.top - canvasRect.top;
+
+            // Move the piece element from the shelf to the canvas DOM tree
+            // to maintain scaling and positioning boundaries correctly
+            puzzleCanvas.appendChild(pieceEl);
+            
+            pieceEl.style.left = `${targetX}px`;
+            pieceEl.style.top = `${targetY}px`;
+            pieceEl.style.transform = 'translate3d(0, 0, 0)';
+
+            // Trigger beautiful sonar snapping pulse ring
+            const radar = document.getElementById(`radar_${pieceEl.dataset.pieceId}`);
+            if (radar) {
+                radar.classList.add('animate');
+                setTimeout(() => radar.classList.remove('animate'), 600);
+            }
+
+            // Sound
+            audioSynth.playSnap();
+            
+            // Voicing correct shape
+            const shapeName = pieceEl.dataset.pieceId.split('_')[1];
+            const friendlyName = shapeName.charAt(0).toUpperCase() + shapeName.slice(1);
+            speechManager.speak(`${friendlyName}!`);
+
+            // Verify if game complete
+            checkPuzzleCompletion();
+        }
+
+        // Return piece back to shelf with pleasant sound and slide
+        function returnHome(pieceEl) {
+            audioSynth.playIncorrect();
+            pieceEl.classList.add('returning-home');
+            pieceEl.style.transform = 'translate3d(0, 0, 0)';
+            
+            setTimeout(() => {
+                pieceEl.classList.remove('returning-home');
+            }, 400);
+        }
+
+        // Verify completion
+        function checkPuzzleCompletion() {
+            // Count total active puzzle pieces inside canvas
+            const snappedPieces = puzzleCanvas.querySelectorAll('.puzzle-piece.snapped');
+            const totalSlots = puzzleCanvas.querySelectorAll('.puzzle-slot');
+
+            if (snappedPieces.length === totalSlots.length) {
+                triggerPuzzleCelebration();
+            }
+        }
+
+        // Rich sensory congratulations chimes and visual pops
+        function triggerPuzzleCelebration() {
+            // 1. Confetti pop
+            confetti({
+                particleCount: 120,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#ab47bc', '#00e676', '#ffeb3b', '#29b6f6']
+            });
+
+            // 2. Chimes
+            audioSynth.playSuccess();
+            
+            // 3. Award Star
+            STATE.score++;
+            scoreVal.textContent = STATE.score;
+            scoreVal.classList.add('pop');
+            setTimeout(() => scoreVal.classList.remove('pop'), 300);
+
+            STATE.streak++;
+            updateStreakStars();
+
+            // 4. Voice congratulations chimes
+            speechManager.speak("Awesome! You completed the puzzle!");
+
+            // 5. Delay to reload
+            setTimeout(() => {
+                if (STATE.streak >= 8) {
+                    triggerLevelUp();
+                } else {
+                    loadNewRound();
+                }
+            }, 2500);
+        }
+
+        // Level Up celebratory routine
+        function triggerLevelUp() {
+            STATE.streak = 0;
+            if (STATE.currentLevel < 3) {
+                STATE.currentLevel++;
+            } else {
+                STATE.currentLevel = 3; // cap at 3
+            }
+
+            audioSynth.playLevelUp();
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+            
+            setTimeout(() => {
+                confetti({ particleCount: 80, spread: 90, origin: { x: 0.2, y: 0.5 } });
+            }, 250);
+            setTimeout(() => {
+                confetti({ particleCount: 80, spread: 90, origin: { x: 0.8, y: 0.5 } });
+            }, 500);
+
+            levelupBadgeText.textContent = `Level ${STATE.currentLevel}!`;
+            levelupOverlay.classList.add('active');
+            
+            speechManager.speak(`Super-duper! You made it to Level ${STATE.currentLevel}!`);
+            
+            setTimeout(() => {
+                levelupOverlay.classList.remove('active');
+                loadNewRound();
+            }, 3200);
+        }
+
+        // Prevent mouse/tap context menus
+        window.addEventListener('contextmenu', e => e.preventDefault());
+
+        // --- Toddler-Proof Settings Hold Panel (2s hold) ---
+        let holdTimer = null;
+        function startHold(e) {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            e.preventDefault();
+            settingsTrigger.classList.add('holding');
+            holdTimer = setTimeout(() => {
+                endHold();
+                openParentDashboard();
+            }, 2000);
+        }
+        function cancelHold() {
+            if (holdTimer) {
+                clearTimeout(holdTimer);
+                holdTimer = null;
+            }
+            settingsTrigger.classList.remove('holding');
+        }
+        function endHold() {
+            cancelHold();
+        }
+
+        settingsTrigger.addEventListener('dragstart', e => e.preventDefault());
+        settingsTrigger.addEventListener('pointerdown', startHold);
+        window.addEventListener('pointerup', cancelHold);
+        window.addEventListener('pointercancel', cancelHold);
+
+        // --- Settings Management ---
+        function openParentDashboard() {
+            document.querySelectorAll('[data-level]').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.level) === STATE.currentLevel);
+            });
+            document.querySelectorAll('[data-scene]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.scene === STATE.currentScene);
+            });
+            
+            toggleSoundBtn.classList.toggle('enabled', STATE.soundEnabled);
+            toggleSpeechBtn.classList.toggle('enabled', STATE.speechEnabled);
+            
+            audioSynth.init();
+            settingsModal.classList.add('active');
+        }
+
+        document.querySelectorAll('[data-level]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.currentLevel = parseInt(btn.dataset.level);
+                STATE.streak = 0;
+                document.querySelectorAll('[data-level]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('[data-scene]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.currentScene = btn.dataset.scene;
+                document.querySelectorAll('[data-scene]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        toggleSoundBtn.addEventListener('click', () => {
+            STATE.soundEnabled = !STATE.soundEnabled;
+            toggleSoundBtn.classList.toggle('enabled', STATE.soundEnabled);
+            if (STATE.soundEnabled) audioSynth.playTone(600, 'sine', 0.1);
+        });
+
+        toggleSpeechBtn.addEventListener('click', () => {
+            STATE.speechEnabled = !STATE.speechEnabled;
+            toggleSpeechBtn.classList.toggle('enabled', STATE.speechEnabled);
+        });
+
+        modalCloseBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('active');
+            loadNewRound();
+        });
+
+        // Initialize Game
+        welcomePlayBtn.addEventListener('click', () => {
+            audioSynth.init();
+            speechManager.init();
+            welcomeOverlay.classList.add('hidden');
+            audioSynth.playSuccess();
+            speechManager.speak("Let's play!");
+            setTimeout(loadNewRound, 300);
+        });
+    </script>
+</body>
+</html>

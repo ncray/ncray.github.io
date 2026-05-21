@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dinosaur Director - Learn AAC</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-color: hsl(120, 60%, 97%);       /* Soft, soothing pastel green */
+            --primary: hsl(150, 75%, 35%);        /* Vibrant action green */
+            --secondary: hsl(200, 90%, 45%);      /* Vibrant noun blue */
+            --yellow: hsl(38, 100%, 55%);         /* Cheerful yellow */
+            --pink: hsl(330, 90%, 65%);           /* Happy accent pink */
+            --text-color: hsl(150, 30%, 20%);     /* Soft dark green, no harsh black */
+            --slate: hsl(200, 15%, 40%);
+            
+            --border-radius: 28px;
+            --font-family: 'Fredoka', sans-serif;
+            
+            /* AAC syntax colors */
+            --color-verb: hsl(150, 75%, 40%);
+            --color-verb-shadow: hsl(150, 75%, 28%);
+            --color-noun: hsl(204, 90%, 45%);
+            --color-noun-shadow: hsl(204, 90%, 32%);
+            --color-starter: hsl(38, 100%, 48%);
+            --color-starter-shadow: hsl(38, 100%, 34%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(hsl(120, 50%, 92%) 2px, transparent 2px);
+            background-size: 36px 36px;
+            font-family: var(--font-family);
+            color: var(--text-color);
+        }
+
+        #app-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 16px 24px 24px 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* --- Header Section --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            z-index: 10;
+        }
+
+        .score-box {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--yellow);
+            text-shadow: 2px 2px 0px hsl(38, 100%, 35%);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .score-star {
+            display: inline-block;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .score-star.pop {
+            transform: scale(1.3) rotate(15deg);
+        }
+
+        .streak-tracker {
+            display: flex;
+            gap: 6px;
+            background-color: hsla(120, 40%, 90%, 0.8);
+            padding: 6px 12px;
+            border-radius: 50px;
+            border: 2px solid white;
+        }
+
+        .streak-star {
+            font-size: 1.3rem;
+            color: hsl(120, 15%, 80%);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .streak-star.active {
+            color: var(--yellow);
+            text-shadow: 1px 2px 0px hsl(38, 100%, 35%);
+            transform: scale(1.2);
+        }
+
+        /* Toddler-Safe Settings Button */
+        .settings-btn-trigger {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: hsla(120, 20%, 80%, 0.4);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        
+        .settings-btn-trigger svg {
+            width: 24px;
+            height: 24px;
+            fill: hsl(150, 20%, 50%);
+            transition: transform 0.5s ease;
+            pointer-events: none;
+        }
+
+        .settings-progress-ring {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 3px solid var(--pink);
+            border-color: var(--pink) transparent transparent transparent;
+            opacity: 0;
+            transform: rotate(0deg);
+            pointer-events: none;
+        }
+        
+        .settings-btn-trigger.holding .settings-progress-ring {
+            opacity: 1;
+            animation: spinProgress 2s linear forwards;
+        }
+        
+        @keyframes spinProgress {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- Sentence Builder Bar --- */
+        #sentence-bar-container {
+            width: 100%;
+            max-width: 750px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            padding: 10px 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05), inset 0 -4px 0 hsl(120, 20%, 90%);
+            border: 3px solid white;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: background-color 0.3s;
+        }
+
+        #sentence-bar-container.success-flash {
+            background-color: hsl(120, 70%, 92%);
+            border-color: var(--primary);
+        }
+
+        .sentence-placeholder {
+            color: hsl(150, 15%, 65%);
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .sentence-chip {
+            background-color: var(--chip-bg, #eee);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 16px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 0 var(--chip-shadow, #ccc);
+            animation: chipIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        @keyframes chipIn {
+            0% { transform: scale(0.6) translateY(10px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        /* --- Main Arena & SVG Dinosaur --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            gap: 15px;
+            position: relative;
+        }
+
+        #level-badge {
+            background-color: var(--pink);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 50px;
+            box-shadow: 0 4px 0 hsl(330, 90%, 50%);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        #dino-arena {
+            width: 100%;
+            max-width: 480px;
+            height: 220px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            margin-bottom: 5px;
+        }
+
+        .dino-svg-container {
+            width: 180px;
+            height: 180px;
+            transition: transform 0.4s ease;
+            transform-origin: bottom center;
+        }
+
+        /* --- Interactive Dino Animations --- */
+        .bounce-breath {
+            animation: dinoBreath 2s ease-in-out infinite;
+        }
+
+        @keyframes dinoBreath {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.03) translateY(-4px); }
+        }
+
+        /* Action: EAT */
+        .anim-eat {
+            animation: dinoEat 1.6s ease-in-out forwards;
+        }
+
+        @keyframes dinoEat {
+            0% { transform: scale(1) rotate(0deg); }
+            15% { transform: scale(1.1) rotate(-10deg) translateY(-10px); }
+            30%, 50%, 70% { transform: scale(1.15) rotate(10deg) translateY(-15deg); }
+            40%, 60%, 80% { transform: scale(1.15) rotate(-5deg) translateY(-15deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        /* Action: JUMP */
+        .anim-jump {
+            animation: dinoJump 1.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+
+        @keyframes dinoJump {
+            0% { transform: translateY(0) scaleY(1); }
+            15% { transform: translateY(5px) scaleY(0.85) scaleX(1.1); }
+            40% { transform: translateY(-110px) scaleY(1.1) scaleX(0.95); }
+            70% { transform: translateY(-110px) scaleY(1.05) rotate(360deg); }
+            85% { transform: translateY(0) scaleY(0.9) scaleX(1.05); }
+            100% { transform: translateY(0) scaleY(1); }
+        }
+
+        /* Action: STOP (Freeze) */
+        .anim-stop {
+            animation: dinoStop 2s ease forwards;
+        }
+
+        @keyframes dinoStop {
+            0% { transform: scale(1); filter: none; }
+            10% { transform: scale(0.95) rotate(-5deg); }
+            20%, 90% { transform: scale(1) rotate(0); filter: grayscale(100%) contrast(150%) brightness(0.8); }
+            100% { transform: scale(1); filter: none; }
+        }
+
+        /* Prop Items */
+        .prop-item {
+            position: absolute;
+            font-size: 4rem;
+            bottom: 10px;
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0);
+            z-index: 5;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .prop-item.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .prop-item.fly-to-mouth {
+            animation: flyToMouth 1.4s ease-in-out forwards;
+        }
+
+        @keyframes flyToMouth {
+            0% { left: 10%; bottom: 10px; transform: scale(1) rotate(0deg); opacity: 1; }
+            40% { left: 35%; bottom: 100px; transform: scale(1.2) rotate(180deg); opacity: 1; }
+            65% { left: 45%; bottom: 110px; transform: scale(0.6) rotate(360deg); opacity: 0.8; }
+            75%, 100% { left: 45%; bottom: 110px; transform: scale(0) rotate(360deg); opacity: 0; }
+        }
+
+        .prop-item.rolling-ball {
+            animation: rollingBall 2s ease-out forwards;
+        }
+
+        @keyframes rollingBall {
+            0% { left: -60px; bottom: 10px; transform: rotate(0deg); opacity: 1; }
+            35% { left: 110px; bottom: 10px; transform: rotate(360deg); opacity: 1; }
+            70% { left: 110px; bottom: 10px; transform: scale(1.1) translateY(-10px); }
+            100% { left: -60px; bottom: 10px; transform: rotate(-360deg); opacity: 0; }
+        }
+
+        .prop-item.falling-leaf {
+            animation: fallingLeaf 2.5s ease-in-out forwards;
+        }
+
+        @keyframes fallingLeaf {
+            0% { left: 120px; bottom: 220px; transform: rotate(0deg); opacity: 0; }
+            15% { opacity: 1; }
+            40% { left: 80px; bottom: 120px; transform: rotate(45deg); }
+            70% { left: 140px; bottom: 60px; transform: rotate(-30deg); }
+            100% { left: 110px; bottom: 10px; transform: scale(1) rotate(0); opacity: 1; }
+        }
+
+        /* Screen Shake effect */
+        .screen-shake {
+            animation: shakeScreen 0.4s ease-in-out;
+        }
+        @keyframes shakeScreen {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-8px, 5px); }
+            40% { transform: translate(8px, -5px); }
+            60% { transform: translate(-5px, -3px); }
+            80% { transform: translate(5px, 3px); }
+        }
+
+        /* --- AAC Grid Button Panel --- */
+        #aac-panel {
+            width: 100%;
+            max-width: 750px;
+            background: white;
+            border-radius: 32px;
+            padding: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), inset 0 -4px 0 hsl(120, 20%, 90%);
+            border: 4px solid white;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .aac-row {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .aac-btn {
+            flex: 1;
+            aspect-ratio: 1.6 / 1;
+            max-height: 105px;
+            border-radius: 20px;
+            border: none;
+            font-family: var(--font-family);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            position: relative;
+            outline: none;
+            transition: all 0.15s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .aac-btn-icon {
+            font-size: 2.8rem;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
+            transition: transform 0.2s;
+        }
+
+        .aac-btn:active:not(.disabled) {
+            transform: translateY(6px);
+        }
+
+        /* Color classes */
+        .aac-btn.verb {
+            background-color: var(--color-verb);
+            box-shadow: 0 8px 0 var(--color-verb-shadow), 0 10px 15px rgba(0, 0, 0, 0.12);
+        }
+        .aac-btn.verb:active:not(.disabled) {
+            box-shadow: 0 2px 0 var(--color-verb-shadow), 0 4px 6px rgba(0, 0, 0, 0.12);
+        }
+
+        .aac-btn.noun {
+            background-color: var(--color-noun);
+            box-shadow: 0 8px 0 var(--color-noun-shadow), 0 10px 15px rgba(0, 0, 0, 0.12);
+        }
+        .aac-btn.noun:active:not(.disabled) {
+            box-shadow: 0 2px 0 var(--color-noun-shadow), 0 4px 6px rgba(0, 0, 0, 0.12);
+        }
+
+        .aac-btn.starter {
+            background-color: var(--color-starter);
+            box-shadow: 0 8px 0 var(--color-starter-shadow), 0 10px 15px rgba(0, 0, 0, 0.12);
+        }
+        .aac-btn.starter:active:not(.disabled) {
+            box-shadow: 0 2px 0 var(--color-starter-shadow), 0 4px 6px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Inactive states */
+        .aac-btn.disabled {
+            opacity: 0.15;
+            filter: grayscale(80%);
+            cursor: not-allowed;
+            pointer-events: none;
+            transform: scale(0.96);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.05), 0 3px 5px rgba(0,0,0,0.05);
+        }
+
+        /* Guided breathing pulse */
+        @keyframes buttonPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.04); box-shadow: 0 10px 0 var(--pulse-shadow), 0 12px 18px rgba(0,0,0,0.18); }
+            100% { transform: scale(1); }
+        }
+        .aac-btn.guided-pulse.verb {
+            --pulse-shadow: var(--color-verb-shadow);
+            animation: buttonPulse 1.4s ease-in-out infinite;
+            z-index: 5;
+        }
+        .aac-btn.guided-pulse.noun {
+            --pulse-shadow: var(--color-noun-shadow);
+            animation: buttonPulse 1.4s ease-in-out infinite;
+            z-index: 5;
+        }
+        .aac-btn.guided-pulse.starter {
+            --pulse-shadow: var(--color-starter-shadow);
+            animation: buttonPulse 1.4s ease-in-out infinite;
+            z-index: 5;
+        }
+
+        /* Muted wrong shake */
+        @keyframes buttonShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+        .aac-btn.shake-muted {
+            animation: buttonShake 0.4s ease-in-out;
+        }
+
+        /* --- Full Screen Welcome Overlay --- */
+        #welcome-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            z-index: 100;
+            padding: 30px;
+            text-align: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        #welcome-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .welcome-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 3px 3px 0px white, 5px 5px 0px rgba(0, 0, 0, 0.05);
+        }
+
+        .welcome-description {
+            font-size: 1.6rem;
+            max-width: 500px;
+            color: var(--text-color);
+            line-height: 1.4;
+        }
+
+        .play-btn {
+            font-family: var(--font-family);
+            font-size: 3rem;
+            font-weight: 700;
+            color: white;
+            background-color: var(--pink);
+            border: none;
+            padding: 24px 70px;
+            border-radius: 60px;
+            box-shadow: 0 14px 0 hsl(330, 90%, 50%), 0 20px 30px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .play-btn:active {
+            transform: translateY(10px);
+            box-shadow: 0 4px 0 hsl(330, 90%, 50%), 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- Parent Dashboard Modal --- */
+        #settings-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #settings-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            width: 90%;
+            max-width: 520px;
+            background: white;
+            border-radius: 36px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+            border: 4px solid var(--pink);
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 2.2rem;
+            color: var(--pink);
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .setting-section {
+            margin-bottom: 24px;
+            border-bottom: 2px dashed hsl(120, 20%, 90%);
+            padding-bottom: 20px;
+        }
+        
+        .setting-section:last-of-type {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .setting-label {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .setting-option-btn {
+            flex: 1;
+            min-width: 70px;
+            font-family: var(--font-family);
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 10px 14px;
+            border-radius: 16px;
+            border: 2px solid hsl(120, 20%, 85%);
+            background-color: hsl(120, 30%, 97%);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .setting-option-btn.active {
+            background-color: var(--pink);
+            color: white;
+            border-color: var(--pink);
+            box-shadow: 0 4px 8px rgba(244, 143, 177, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .setting-toggle-btn {
+            width: 100%;
+            font-family: var(--font-family);
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 12px;
+            border-radius: 16px;
+            border: 2px solid hsl(120, 20%, 85%);
+            background-color: hsl(120, 30%, 97%);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        
+        .setting-toggle-btn.enabled {
+            background-color: hsla(150, 75%, 45%, 0.15);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .setting-toggle-indicator {
+            width: 48px;
+            height: 26px;
+            background-color: hsl(120, 10%, 80%);
+            border-radius: 50px;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+        
+        .setting-toggle-indicator::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            transition: transform 0.2s;
+        }
+        
+        .setting-toggle-btn.enabled .setting-toggle-indicator {
+            background-color: var(--primary);
+        }
+        
+        .setting-toggle-btn.enabled .setting-toggle-indicator::after {
+            transform: translateX(22px);
+        }
+
+        .modal-close-btn {
+            width: 100%;
+            font-family: var(--font-family);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            background-color: var(--primary);
+            border: none;
+            padding: 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 hsl(150, 75%, 25%), 0 8px 15px rgba(0,0,0,0.15);
+            transition: transform 0.1s;
+            margin-top: 10px;
+        }
+
+        .modal-close-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 hsl(150, 75%, 25%), 0 2px 5px rgba(0,0,0,0.15);
+        }
+
+        /* --- Level-Up Celebration Overlay --- */
+        #levelup-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        
+        #levelup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .levelup-badge-giant {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: white;
+            background-color: var(--pink);
+            padding: 10px 24px;
+            border-radius: 50px;
+            box-shadow: 0 6px 0 hsl(330, 90%, 50%);
+            margin-bottom: 20px;
+            animation: levelUpBounce 0.8s infinite alternate;
+        }
+
+        .levelup-text {
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 2px 4px 0px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        
+        @keyframes levelUpBounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-15px); }
+        }
+
+        /* --- Responsive Styles for Tablets & Phones --- */
+        @media (max-width: 600px) {
+            #app-container {
+                padding: 10px 12px 12px 12px;
+            }
+            #sentence-bar-container {
+                min-height: 60px;
+                padding: 6px 10px;
+            }
+            .sentence-chip {
+                font-size: 1.1rem;
+                padding: 6px 12px;
+            }
+            .sentence-placeholder {
+                font-size: 1.1rem;
+            }
+            #dino-arena {
+                height: 160px;
+            }
+            .dino-svg-container {
+                width: 120px;
+                height: 120px;
+            }
+            .prop-item {
+                font-size: 2.5rem;
+            }
+            #aac-panel {
+                padding: 10px;
+                border-radius: 24px;
+                gap: 8px;
+            }
+            .aac-row {
+                gap: 8px;
+            }
+            .aac-btn {
+                font-size: 1rem;
+                border-radius: 14px;
+                box-shadow: 0 5px 0 var(--color-verb-shadow);
+            }
+            .aac-btn-icon {
+                font-size: 2rem;
+            }
+            .welcome-title {
+                font-size: 2.2rem;
+            }
+            .welcome-description {
+                font-size: 1.1rem;
+            }
+            .play-btn {
+                font-size: 2rem;
+                padding: 16px 40px;
+            }
+            .levelup-text {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body id="arena-shaker">
+
+    <!-- Welcome Overlay -->
+    <div id="welcome-overlay">
+        <h1 class="welcome-title">Dinosaur Director 🦖</h1>
+        <p class="welcome-description">Hi Caleb! Tap the big colored talker buttons to command the dinosaurs!</p>
+        <button class="play-btn" id="welcome-play-btn">Play 🚀</button>
+    </div>
+
+    <!-- Parent Settings Modal -->
+    <div id="settings-modal">
+        <div class="modal-card">
+            <h2 class="modal-title">⚙️ Parent Dashboard</h2>
+            
+            <!-- Manual Level -->
+            <div class="setting-section">
+                <span class="setting-label">Manually Set Level</span>
+                <div class="btn-group">
+                    <button class="setting-option-btn" data-level="1">Level 1<br><small>Cause & Effect</small></button>
+                    <button class="setting-option-btn" data-level="2">Level 2<br><small>2-Word Command</small></button>
+                    <button class="setting-option-btn" data-level="3">Level 3<br><small>Action + Object</small></button>
+                </div>
+            </div>
+
+            <!-- Dinosaur Character Selection -->
+            <div class="setting-section">
+                <span class="setting-label">Dinosaur Friend</span>
+                <div class="btn-group">
+                    <button class="setting-option-btn" data-dino="trex">🦖 T-Rex</button>
+                    <button class="setting-option-btn" data-dino="triceratops">🦕 Triceratops</button>
+                    <button class="setting-option-btn" data-dino="brachiosaurus">🦕 Brachio</button>
+                </div>
+            </div>
+
+            <!-- Audio Settings -->
+            <div class="setting-section">
+                <span class="setting-label">Audio Settings</span>
+                <button class="setting-toggle-btn enabled" id="toggle-sound">
+                    Sound Effects (Chimes)
+                    <div class="setting-toggle-indicator"></div>
+                </button>
+                <button class="setting-toggle-btn enabled" id="toggle-speech">
+                    Voice Prompts (Speech)
+                    <div class="setting-toggle-indicator"></div>
+                </button>
+            </div>
+
+            <button class="modal-close-btn" id="modal-close-btn">Done 🌟</button>
+        </div>
+    </div>
+
+    <!-- Level Up Celebration -->
+    <div id="levelup-overlay">
+        <div class="levelup-badge-giant" id="levelup-badge-text">Level 2!</div>
+        <div class="levelup-text">Rawr-tastic Job! 🎉</div>
+    </div>
+
+    <!-- App Main UI -->
+    <div id="app-container">
+        
+        <header>
+            <div class="score-box" id="score-display">⭐ <span class="score-star" id="score-val">0</span></div>
+            
+            <div class="streak-tracker">
+                <span class="streak-star" id="streak-1">★</span>
+                <span class="streak-star" id="streak-2">★</span>
+                <span class="streak-star" id="streak-3">★</span>
+                <span class="streak-star" id="streak-4">★</span>
+                <span class="streak-star" id="streak-5">★</span>
+                <span class="streak-star" id="streak-6">★</span>
+                <span class="streak-star" id="streak-7">★</span>
+                <span class="streak-star" id="streak-8">★</span>
+            </div>
+            
+            <div class="settings-btn-trigger" id="settings-trigger">
+                <div class="settings-progress-ring"></div>
+                <svg viewBox="0 0 24 24">
+                    <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.04,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                </svg>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main>
+            <div id="level-badge">Level 1</div>
+            
+            <!-- AAC Speech Sentence Bar -->
+            <div id="sentence-bar-container">
+                <span class="sentence-placeholder">Tap a talker button below!</span>
+            </div>
+
+            <!-- Dino Stage -->
+            <div id="dino-arena">
+                <!-- Emojis or Vector items generated here -->
+                <div id="prop-leaf" class="prop-item">🌿</div>
+                <div id="prop-ball" class="prop-item">🏀</div>
+                <div id="prop-rock" class="prop-item">🪨</div>
+
+                <!-- Custom inline SVGs for dinosaurs -->
+                <div class="dino-svg-container bounce-breath" id="dino-container">
+                    <!-- T-Rex (Default) -->
+                    <svg id="svg-trex" viewBox="0 0 100 100" width="100%" height="100%">
+                        <!-- Shadow -->
+                        <ellipse cx="50" cy="92" rx="35" ry="6" fill="rgba(0,0,0,0.15)"/>
+                        
+                        <!-- Body & Legs -->
+                        <ellipse cx="44" cy="65" rx="22" ry="18" fill="#26a69a"/>
+                        <rect x="34" y="75" width="8" height="18" rx="4" fill="#1de9b6"/>
+                        <rect x="46" y="75" width="8" height="18" rx="4" fill="#00bfa5"/>
+                        
+                        <!-- Tail -->
+                        <path d="M26,68 Q10,75 5,88 Q15,85 24,78 Z" fill="#26a69a"/>
+                        
+                        <!-- Neck -->
+                        <path d="M50,56 L62,40 L68,48 L56,62 Z" fill="#26a69a"/>
+                        
+                        <!-- Head -->
+                        <path id="trex-head" d="M55,30 C65,30 76,32 78,40 C80,48 74,52 62,52 L54,52 C50,46 48,34 55,30 Z" fill="#26a69a"/>
+                        
+                        <!-- Jaw (separately animatable/drawn to be cute) -->
+                        <path id="trex-jaw" d="M56,52 L72,52 C70,57 62,58 56,56 Z" fill="#1de9b6"/>
+                        
+                        <!-- Cheek & Eye -->
+                        <circle cx="68" cy="38" r="4.5" fill="white"/>
+                        <circle cx="68" cy="38" r="2.5" fill="#37474f"/>
+                        
+                        <!-- Cheeky Smile Teeth -->
+                        <polygon points="60,48 62,52 64,48" fill="white"/>
+                        <polygon points="66,48 68,52 70,48" fill="white"/>
+                        
+                        <!-- Tiny arms -->
+                        <path d="M52,65 Q58,65 60,69" stroke="#1de9b6" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+                    </svg>
+
+                    <!-- Triceratops (Hidden) -->
+                    <svg id="svg-triceratops" viewBox="0 0 100 100" width="100%" height="100%" style="display: none;">
+                        <ellipse cx="50" cy="92" rx="35" ry="6" fill="rgba(0,0,0,0.15)"/>
+                        <!-- Legs -->
+                        <rect x="28" y="70" width="10" height="23" rx="5" fill="#ab47bc"/>
+                        <rect x="42" y="72" width="10" height="21" rx="5" fill="#ab47bc"/>
+                        <rect x="58" y="72" width="10" height="21" rx="5" fill="#8e24aa"/>
+                        <rect x="70" y="70" width="10" height="23" rx="5" fill="#8e24aa"/>
+                        
+                        <!-- Tail -->
+                        <path d="M30,68 Q10,70 5,60 Q15,62 28,68 Z" fill="#ab47bc"/>
+                        
+                        <!-- Big Body -->
+                        <ellipse cx="50" cy="66" rx="26" ry="18" fill="#ba68c8"/>
+                        
+                        <!-- Neck Shield -->
+                        <path d="M68,58 Q78,32 64,36 Q50,40 64,58 Z" fill="#d32f2f"/>
+                        <path d="M68,58 Q85,42 70,46 Q55,50 68,58 Z" fill="#ab47bc"/>
+                        
+                        <!-- Head -->
+                        <ellipse cx="76" cy="62" rx="14" ry="12" fill="#ba68c8"/>
+                        
+                        <!-- Horns -->
+                        <path d="M78,54 Q88,40 92,38 Q82,46 76,54" stroke="white" stroke-width="3" fill="white" stroke-linecap="round"/>
+                        <path d="M72,52 Q82,38 86,36 Q78,44 72,52" stroke="white" stroke-width="2.5" fill="white" stroke-linecap="round"/>
+                        
+                        <!-- Nose and Beak -->
+                        <path d="M88,64 Q94,66 90,70 L86,68 Z" fill="#ab47bc"/>
+                        <!-- Eye -->
+                        <circle cx="75" cy="58" r="3.5" fill="white"/>
+                        <circle cx="75" cy="58" r="2" fill="#37474f"/>
+                    </svg>
+
+                    <!-- Brachiosaurus (Hidden) -->
+                    <svg id="svg-brachiosaurus" viewBox="0 0 100 100" width="100%" height="100%" style="display: none;">
+                        <ellipse cx="50" cy="92" rx="35" ry="6" fill="rgba(0,0,0,0.15)"/>
+                        
+                        <!-- Tail -->
+                        <path d="M22,70 Q5,72 2,82 Q12,78 20,74 Z" fill="#0288d1"/>
+                        
+                        <!-- Body -->
+                        <ellipse cx="38" cy="72" rx="20" ry="14" fill="#03a9f4"/>
+                        
+                        <!-- Legs -->
+                        <rect x="24" y="78" width="8" height="15" rx="3" fill="#0288d1"/>
+                        <rect x="34" y="78" width="8" height="15" rx="3" fill="#03a9f4"/>
+                        <rect x="42" y="78" width="8" height="15" rx="3" fill="#0288d1"/>
+                        <rect x="50" y="78" width="8" height="15" rx="3" fill="#03a9f4"/>
+                        
+                        <!-- Extremely long Neck -->
+                        <path d="M48,70 C52,48 52,24 64,15 C68,10 74,12 76,20 C64,28 58,52 52,74 Z" fill="#03a9f4"/>
+                        
+                        <!-- Head -->
+                        <ellipse cx="74" cy="18" rx="10" ry="7" fill="#03a9f4"/>
+                        
+                        <!-- Eye -->
+                        <circle cx="76" cy="16" r="2.5" fill="white"/>
+                        <circle cx="76" cy="16" r="1.5" fill="#37474f"/>
+                        
+                        <!-- Mouth lines -->
+                        <path d="M70,22 Q75,20 78,21" stroke="#0288d1" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- AAC Interactive Board -->
+            <div id="aac-panel">
+                <!-- Verbs (Actions) - Green -->
+                <div class="aac-row" id="row-actions">
+                    <button class="aac-btn verb" id="btn-eat">
+                        <span class="aac-btn-icon">🍽️</span>
+                        <span>EAT</span>
+                    </button>
+                    <button class="aac-btn verb" id="btn-jump">
+                        <span class="aac-btn-icon">🦘</span>
+                        <span>JUMP</span>
+                    </button>
+                    <button class="aac-btn verb" id="btn-stop">
+                        <span class="aac-btn-icon">🛑</span>
+                        <span>STOP</span>
+                    </button>
+                </div>
+                
+                <!-- Nouns (Objects) - Blue -->
+                <div class="aac-row" id="row-objects">
+                    <button class="aac-btn noun" id="btn-leaf">
+                        <span class="aac-btn-icon">🌿</span>
+                        <span>LEAF</span>
+                    </button>
+                    <button class="aac-btn noun" id="btn-ball">
+                        <span class="aac-btn-icon">🏀</span>
+                        <span>BALL</span>
+                    </button>
+                    <button class="aac-btn noun" id="btn-rock">
+                        <span class="aac-btn-icon">🪨</span>
+                        <span>ROCK</span>
+                    </button>
+                </div>
+
+                <!-- Starters (Level 2 specific helper) - Yellow -->
+                <div class="aac-row" id="row-starters" style="display: none;">
+                    <button class="aac-btn starter" id="btn-make">
+                        <span class="aac-btn-icon">👉</span>
+                        <span>MAKE</span>
+                    </button>
+                    <button class="aac-btn noun" id="btn-dino-eat">
+                        <span class="aac-btn-icon">🦖</span>
+                        <span>DINO EAT</span>
+                    </button>
+                    <button class="aac-btn noun" id="btn-dino-jump">
+                        <span class="aac-btn-icon">🦘</span>
+                        <span>DINO JUMP</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+        
+    </div>
+
+    <script>
+        // --- Core Configurations & State ---
+        const STATE = {
+            score: 0,
+            streak: 0,
+            currentLevel: 1,
+            currentDino: 'trex',
+            soundEnabled: true,
+            speechEnabled: true,
+            isAnimating: false,
+            
+            // Sentence Building variables
+            selectedAction: '',
+            selectedObject: '',
+            selectedStarter: '',
+            
+            // Expected values to complete the task based on Level prompt guides
+            expectedAction: '',
+            expectedObject: '',
+            expectedStarter: '',
+        };
+
+        // Emojis for sentence builder chips
+        const CHIP_METADATA = {
+            'MAKE': { bg: 'var(--color-starter)', shadow: 'var(--color-starter-shadow)' },
+            'DINO EAT': { bg: 'var(--color-noun)', shadow: 'var(--color-noun-shadow)' },
+            'DINO JUMP': { bg: 'var(--color-noun)', shadow: 'var(--color-noun-shadow)' },
+            'EAT': { bg: 'var(--color-verb)', shadow: 'var(--color-verb-shadow)' },
+            'JUMP': { bg: 'var(--color-verb)', shadow: 'var(--color-verb-shadow)' },
+            'STOP': { bg: 'var(--color-verb)', shadow: 'var(--color-verb-shadow)' },
+            'LEAF': { bg: 'var(--color-noun)', shadow: 'var(--color-noun-shadow)' },
+            'BALL': { bg: 'var(--color-noun)', shadow: 'var(--color-noun-shadow)' },
+            'ROCK': { bg: 'var(--color-noun)', shadow: 'var(--color-noun-shadow)' }
+        };
+
+        // --- DOM Elements ---
+        const welcomeOverlay = document.getElementById('welcome-overlay');
+        const welcomePlayBtn = document.getElementById('welcome-play-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsTrigger = document.getElementById('settings-trigger');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        
+        const scoreVal = document.getElementById('score-val');
+        const levelBadge = document.getElementById('level-badge');
+        const sentenceBar = document.getElementById('sentence-bar-container');
+        
+        const dinoContainer = document.getElementById('dino-container');
+        const arenaShaker = document.getElementById('arena-shaker');
+
+        // Props
+        const propLeaf = document.getElementById('prop-leaf');
+        const propBall = document.getElementById('prop-ball');
+        const propRock = document.getElementById('prop-rock');
+
+        // AAC Buttons
+        const btnEat = document.getElementById('btn-eat');
+        const btnJump = document.getElementById('btn-jump');
+        const btnStop = document.getElementById('btn-stop');
+        
+        const btnLeaf = document.getElementById('btn-leaf');
+        const btnBall = document.getElementById('btn-ball');
+        const btnRock = document.getElementById('btn-rock');
+
+        const btnMake = document.getElementById('btn-make');
+        const btnDinoEat = document.getElementById('btn-dino-eat');
+        const btnDinoJump = document.getElementById('btn-dino-jump');
+
+        const toggleSoundBtn = document.getElementById('toggle-sound');
+        const toggleSpeechBtn = document.getElementById('toggle-speech');
+        
+        const levelupOverlay = document.getElementById('levelup-overlay');
+        const levelupBadgeText = document.getElementById('levelup-badge-text');
+
+        // --- Custom Audio Synthesizer (Web Audio API) ---
+        class WebAudioSynth {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playTone(freq, type, duration, delay = 0, volume = 0.15) {
+                if (!STATE.soundEnabled) return;
+                this.init();
+                
+                setTimeout(() => {
+                    const osc = this.ctx.createOscillator();
+                    const gainNode = this.ctx.createGain();
+                    
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    
+                    gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    
+                    osc.connect(gainNode);
+                    gainNode.connect(this.ctx.destination);
+                    
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                }, delay * 1000);
+            }
+            playSuccess() {
+                this.playTone(523.25, 'triangle', 0.5, 0.0, 0.18);
+                this.playTone(659.25, 'triangle', 0.5, 0.08, 0.18);
+                this.playTone(783.99, 'triangle', 0.5, 0.16, 0.18);
+                this.playTone(1046.50, 'triangle', 0.6, 0.24, 0.18);
+            }
+            playCorrectTap() {
+                this.playTone(392.00, 'sine', 0.12, 0, 0.1);
+                this.playTone(523.25, 'sine', 0.15, 0.06, 0.1);
+            }
+            playIncorrect() {
+                this.playTone(220.00, 'sine', 0.25, 0.0, 0.22);
+            }
+            playLevelUp() {
+                const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50];
+                notes.forEach((freq, idx) => {
+                    this.playTone(freq, 'triangle', 0.4, idx * 0.08, 0.15);
+                });
+            }
+        }
+        const audioSynth = new WebAudioSynth();
+
+        // --- Custom Speech Synthesizer ---
+        const speechManager = {
+            synth: window.speechSynthesis,
+            voices: [],
+            activeUtterances: new Set(),
+            init() {
+                if (!this.synth) return;
+                this.voices = this.synth.getVoices();
+                if (speechSynthesis.onvoiceschanged !== undefined) {
+                    speechSynthesis.onvoiceschanged = () => {
+                        this.voices = this.synth.getVoices();
+                    };
+                }
+            },
+            speak(text, callback = null) {
+                if (!STATE.speechEnabled) {
+                    if (callback) callback();
+                    return;
+                }
+                if (!this.synth) {
+                    if (callback) callback();
+                    return;
+                }
+                try {
+                    if (this.synth.speaking) {
+                        this.synth.cancel();
+                    }
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.pitch = 1.3;
+                    utterance.rate = 0.8;
+                    
+                    const preferredVoice = this.voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Samantha')));
+                    if (preferredVoice) utterance.voice = preferredVoice;
+                    
+                    this.activeUtterances.add(utterance);
+                    const cleanUp = () => {
+                        this.activeUtterances.delete(utterance);
+                        if (callback) callback();
+                    };
+                    utterance.onend = cleanUp;
+                    utterance.onerror = cleanUp;
+                    this.synth.speak(utterance);
+                } catch (e) {
+                    console.warn("Speech Synthesis error:", e);
+                    if (callback) callback();
+                }
+            }
+        };
+        speechManager.init();
+
+        // --- Game Setup & Logic ---
+        function updateStreakStars() {
+            for (let i = 1; i <= 8; i++) {
+                const star = document.getElementById(`streak-${i}`);
+                if (STATE.streak >= i) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            }
+        }
+
+        // Generate visual chips inside the sentence builder bar
+        function renderSentenceBar() {
+            sentenceBar.innerHTML = '';
+            
+            const words = [];
+            if (STATE.currentLevel === 2) {
+                if (STATE.selectedStarter) words.push(STATE.selectedStarter);
+                if (STATE.selectedNoun) words.push(STATE.selectedNoun);
+            } else {
+                if (STATE.selectedAction) words.push(STATE.selectedAction);
+                if (STATE.selectedObject) words.push(STATE.selectedObject);
+            }
+
+            if (words.length === 0) {
+                const ph = document.createElement('span');
+                ph.className = 'sentence-placeholder';
+                
+                // Customize instruction prompt in sentence bar
+                if (STATE.currentLevel === 1) {
+                    ph.textContent = `Tap [${STATE.expectedAction}]!`;
+                } else if (STATE.currentLevel === 2) {
+                    ph.textContent = `Tap [MAKE] first!`;
+                } else {
+                    ph.textContent = `Tap [${STATE.expectedAction}] first!`;
+                }
+                sentenceBar.appendChild(ph);
+                return;
+            }
+
+            words.forEach(w => {
+                const chip = document.createElement('div');
+                chip.className = 'sentence-chip';
+                
+                const meta = CHIP_METADATA[w] || { bg: '#999', shadow: '#666' };
+                chip.style.setProperty('--chip-bg', meta.bg);
+                chip.style.setProperty('--chip-shadow', meta.shadow);
+                
+                // Icon + Text mapping
+                let icon = '❓';
+                if (w === 'EAT' || w === 'DINO EAT') icon = '🍽️';
+                if (w === 'JUMP' || w === 'DINO JUMP') icon = '🦘';
+                if (w === 'STOP') icon = '🛑';
+                if (w === 'LEAF') icon = '🌿';
+                if (w === 'BALL') icon = '🏀';
+                if (w === 'ROCK') icon = '🪨';
+                if (w === 'MAKE') icon = '👉';
+
+                chip.innerHTML = `<span class="sentence-chip-icon">${icon}</span> <span>${w}</span>`;
+                sentenceBar.appendChild(chip);
+            });
+        }
+
+        // Initialize Level Progression and Expectation
+        function loadNewRound() {
+            STATE.isAnimating = false;
+            STATE.selectedAction = '';
+            STATE.selectedObject = '';
+            STATE.selectedStarter = '';
+            STATE.selectedNoun = '';
+            
+            updateStreakStars();
+            levelBadge.textContent = `Level ${STATE.currentLevel}`;
+            
+            // Clean up visual states on all buttons
+            document.querySelectorAll('.aac-btn').forEach(btn => {
+                btn.className = btn.className.replace(/\bguided-pulse\b/g, '');
+                btn.classList.remove('disabled');
+            });
+
+            // Adjust viewable grids based on level
+            const rowActions = document.getElementById('row-actions');
+            const rowObjects = document.getElementById('row-objects');
+            const rowStarters = document.getElementById('row-starters');
+
+            if (STATE.currentLevel === 1) {
+                rowActions.style.display = 'flex';
+                rowObjects.style.display = 'none';
+                rowStarters.style.display = 'none';
+                
+                // Randomly prompt Caleb to perform EAT, JUMP, or STOP
+                const actions = ['EAT', 'JUMP', 'STOP'];
+                STATE.expectedAction = actions[Math.floor(Math.random() * actions.length)];
+                
+                // Highlight and pulse only the expected action button (guided instruction)
+                document.querySelectorAll('.verb').forEach(btn => {
+                    const word = btn.querySelector('span:not(.aac-btn-icon)').textContent;
+                    if (word !== STATE.expectedAction) {
+                        btn.classList.add('disabled');
+                    } else {
+                        btn.classList.add('guided-pulse');
+                    }
+                });
+
+                speechManager.speak(`Can you make the dinosaur ${STATE.expectedAction.toLowerCase()}? Tap ${STATE.expectedAction}!`);
+
+            } else if (STATE.currentLevel === 2) {
+                rowActions.style.display = 'none';
+                rowObjects.style.display = 'none';
+                rowStarters.style.display = 'flex';
+
+                STATE.expectedStarter = 'MAKE';
+                const nouns = ['DINO EAT', 'DINO JUMP'];
+                STATE.expectedNoun = nouns[Math.floor(Math.random() * nouns.length)];
+
+                // First tap must be MAKE (guided pulse)
+                btnMake.classList.add('guided-pulse');
+                btnDinoEat.classList.add('disabled');
+                btnDinoJump.classList.add('disabled');
+
+                speechManager.speak(`Let's make a phrase! Tap MAKE first!`);
+
+            } else if (STATE.currentLevel === 3) {
+                rowActions.style.display = 'flex';
+                rowObjects.style.display = 'flex';
+                rowStarters.style.display = 'none';
+
+                // Pick randomized verb-noun pairing goals
+                const actions = ['EAT', 'JUMP', 'STOP'];
+                const objects = ['LEAF', 'BALL', 'ROCK'];
+                STATE.expectedAction = actions[Math.floor(Math.random() * actions.length)];
+                STATE.expectedObject = objects[Math.floor(Math.random() * objects.length)];
+
+                // Disable objects at start, highlight expected action
+                document.querySelectorAll('.noun').forEach(btn => btn.classList.add('disabled'));
+                document.querySelectorAll('.verb').forEach(btn => {
+                    const word = btn.querySelector('span:not(.aac-btn-icon)').textContent;
+                    if (word !== STATE.expectedAction) {
+                        btn.classList.add('disabled');
+                    } else {
+                        btn.classList.add('guided-pulse');
+                    }
+                });
+
+                speechManager.speak(`Let's tell the dinosaur what to do. Can you build the phrase: ${STATE.expectedAction.toLowerCase()} ${STATE.expectedObject.toLowerCase()}? Tap ${STATE.expectedAction}!`);
+            }
+
+            renderSentenceBar();
+        }
+
+        // Tap Handlers
+        function handleAacTap(btnType, val) {
+            if (STATE.isAnimating) return;
+            const btnEl = document.getElementById(`btn-${val.toLowerCase().replace(' ', '-')}`);
+
+            if (STATE.currentLevel === 1) {
+                if (val === STATE.expectedAction) {
+                    STATE.selectedAction = val;
+                    audioSynth.playCorrectTap();
+                    renderSentenceBar();
+                    triggerActionAnimation(val);
+                } else {
+                    btnEl.classList.add('shake-muted');
+                    setTimeout(() => btnEl.classList.remove('shake-muted'), 400);
+                }
+            } else if (STATE.currentLevel === 2) {
+                if (btnType === 'starter' && val === 'MAKE') {
+                    STATE.selectedStarter = val;
+                    audioSynth.playCorrectTap();
+                    btnMake.classList.remove('guided-pulse');
+                    btnMake.classList.add('disabled');
+                    
+                    // Enable the corresponding target noun
+                    btnDinoEat.classList.remove('disabled');
+                    btnDinoJump.classList.remove('disabled');
+                    
+                    document.querySelectorAll('.aac-row .noun').forEach(b => {
+                        const label = b.querySelector('span:not(.aac-btn-icon)').textContent;
+                        if (label === STATE.expectedNoun) {
+                            b.classList.add('guided-pulse');
+                        } else {
+                            b.classList.add('disabled');
+                        }
+                    });
+
+                    renderSentenceBar();
+                    speechManager.speak(`MAKE! Now tap ${STATE.expectedNoun.toLowerCase()}!`);
+
+                } else if (btnType === 'noun' && val === STATE.expectedNoun) {
+                    STATE.selectedNoun = val;
+                    audioSynth.playCorrectTap();
+                    btnDinoEat.classList.remove('guided-pulse');
+                    btnDinoJump.classList.remove('guided-pulse');
+                    btnDinoEat.classList.add('disabled');
+                    btnDinoJump.classList.add('disabled');
+
+                    renderSentenceBar();
+                    const cleanAction = val.replace('DINO ', '');
+                    triggerActionAnimation(cleanAction);
+                } else {
+                    btnEl.classList.add('shake-muted');
+                    setTimeout(() => btnEl.classList.remove('shake-muted'), 400);
+                }
+            } else if (STATE.currentLevel === 3) {
+                if (btnType === 'verb' && val === STATE.expectedAction) {
+                    STATE.selectedAction = val;
+                    audioSynth.playCorrectTap();
+                    
+                    // Lock verbs, enable objects
+                    document.querySelectorAll('.verb').forEach(btn => btn.classList.add('disabled'));
+                    document.querySelectorAll('.noun').forEach(btn => {
+                        const label = btn.querySelector('span:not(.aac-btn-icon)').textContent;
+                        if (label === STATE.expectedObject) {
+                            btn.classList.remove('disabled');
+                            btn.classList.add('guided-pulse');
+                        } else {
+                            btn.classList.add('disabled');
+                        }
+                    });
+
+                    renderSentenceBar();
+                    speechManager.speak(`${val}! Now tap ${STATE.expectedObject.toLowerCase()}!`);
+
+                } else if (btnType === 'noun' && val === STATE.expectedObject) {
+                    STATE.selectedObject = val;
+                    audioSynth.playCorrectTap();
+                    document.querySelectorAll('.noun').forEach(btn => btn.classList.remove('guided-pulse', 'disabled'));
+                    document.querySelectorAll('.noun').forEach(btn => btn.classList.add('disabled'));
+
+                    renderSentenceBar();
+                    triggerActionAnimation(STATE.selectedAction, val);
+                } else {
+                    btnEl.classList.add('shake-muted');
+                    setTimeout(() => btnEl.classList.remove('shake-muted'), 400);
+                }
+            }
+        }
+
+        // --- Core Cause-and-Effect Animation Controller ---
+        function triggerActionAnimation(action, object = '') {
+            STATE.isAnimating = true;
+            sentenceBar.classList.add('success-flash');
+            
+            // Speak completed syntax
+            let textToSpeak = action.toLowerCase();
+            if (STATE.currentLevel === 2) {
+                textToSpeak = `make dinosaur ${textToSpeak}`;
+            } else if (STATE.currentLevel === 3) {
+                textToSpeak = `${action.toLowerCase()} ${object.toLowerCase()}`;
+            }
+            speechManager.speak(`${textToSpeak}! Rawr!`);
+
+            // Apply specific anim-class to SVG
+            const cleanAction = action.toUpperCase();
+            const cleanObj = object ? object.toUpperCase() : '';
+            
+            dinoContainer.classList.remove('bounce-breath');
+
+            if (cleanAction === 'EAT') {
+                dinoContainer.classList.add('anim-eat');
+                
+                // If there's a leaf/ball/rock object involved
+                let targetProp = null;
+                if (cleanObj === 'LEAF') targetProp = propLeaf;
+                if (cleanObj === 'BALL') targetProp = propBall;
+                if (cleanObj === 'ROCK') targetProp = propRock;
+                
+                // Fallback leaf trigger for level 1 & 2
+                if (!targetProp) targetProp = propLeaf;
+
+                // Show and animate prop item
+                targetProp.className = 'prop-item visible fly-to-mouth';
+                
+                setTimeout(() => {
+                    if (cleanObj === 'ROCK') {
+                        audioSynth.playTone(280, 'triangle', 0.2, 0, 0.2); // Bonk rock sound
+                        audioSynth.playTone(180, 'sine', 0.3, 0.1, 0.15);
+                    } else if (cleanObj === 'BALL') {
+                        audioSynth.playTone(450, 'sine', 0.15, 0, 0.2);   // Boing/Squeak ball
+                        audioSynth.playTone(600, 'sine', 0.12, 0.08, 0.15);
+                    } else {
+                        // Leaf crunch sounds
+                        audioSynth.playTone(900, 'noise', 0.1, 0, 0.15);
+                        audioSynth.playTone(850, 'noise', 0.1, 0.15, 0.15);
+                    }
+                }, 600);
+
+            } else if (cleanAction === 'JUMP') {
+                dinoContainer.classList.add('anim-jump');
+                
+                let targetProp = null;
+                if (cleanObj === 'ROCK') targetProp = propRock;
+                if (cleanObj === 'BALL') targetProp = propBall;
+                if (cleanObj === 'LEAF') targetProp = propLeaf;
+
+                if (targetProp) {
+                    targetProp.className = 'prop-item visible';
+                    targetProp.style.left = '45%';
+                    targetProp.style.bottom = '10px';
+                }
+
+                // Play whoosh, jump, and landing shake sound effects
+                audioSynth.playTone(220, 'triangle', 0.3, 0, 0.15); // Jump launch
+                audioSynth.playTone(440, 'triangle', 0.25, 0.15, 0.15);
+                
+                setTimeout(() => {
+                    arenaShaker.classList.add('screen-shake');
+                    audioSynth.playTone(80, 'sine', 0.5, 0, 0.35); // Landing heavy thud
+                    
+                    if (targetProp) {
+                        targetProp.style.transform = 'scale(0.8) translateY(15px)';
+                    }
+                    setTimeout(() => arenaShaker.classList.remove('screen-shake'), 400);
+                }, 850);
+
+            } else if (cleanAction === 'STOP') {
+                dinoContainer.classList.add('anim-stop');
+                
+                let targetProp = null;
+                if (cleanObj === 'BALL') {
+                    targetProp = propBall;
+                    targetProp.className = 'prop-item visible rolling-ball';
+                } else if (cleanObj === 'LEAF') {
+                    targetProp = propLeaf;
+                    targetProp.className = 'prop-item visible falling-leaf';
+                } else {
+                    targetProp = propRock;
+                    targetProp.className = 'prop-item visible rolling-ball'; // rolls rock
+                }
+
+                audioSynth.playTone(300, 'sine', 0.6, 0.2, 0.25); // Freeze chime
+                audioSynth.playTone(400, 'triangle', 0.5, 0.4, 0.15);
+
+                setTimeout(() => {
+                    if (targetProp) {
+                        // Pause the prop animation midway
+                        targetProp.style.animationPlayState = 'paused';
+                        targetProp.style.filter = 'drop-shadow(0 0 10px var(--pink))';
+                    }
+                }, 750);
+            }
+
+            // Confetti rewards from center stage
+            setTimeout(() => {
+                const bounds = dinoContainer.getBoundingClientRect();
+                const originX = (bounds.left + bounds.width / 2) / window.innerWidth;
+                const originY = (bounds.top + bounds.height / 2) / window.innerHeight;
+                
+                confetti({
+                    particleCount: 75,
+                    spread: 60,
+                    origin: { x: originX, y: originY },
+                    colors: ['#4caf50', '#2196f3', '#ffeb3b', '#e91e63']
+                });
+                
+                audioSynth.playSuccess();
+                
+                // Add star score
+                STATE.score++;
+                scoreVal.textContent = STATE.score;
+                scoreVal.classList.add('pop');
+                setTimeout(() => scoreVal.classList.remove('pop'), 300);
+
+                STATE.streak++;
+                updateStreakStars();
+
+            }, 1200);
+
+            // Clean up and load new round
+            setTimeout(() => {
+                sentenceBar.classList.remove('success-flash');
+                dinoContainer.className = 'dino-svg-container bounce-breath';
+                
+                // Hide props & restore animation states
+                [propLeaf, propBall, propRock].forEach(p => {
+                    p.className = 'prop-item';
+                    p.style.animationPlayState = 'running';
+                    p.style.filter = 'none';
+                    p.style.left = '';
+                    p.style.bottom = '';
+                    p.style.transform = '';
+                });
+
+                if (STATE.streak >= 8) {
+                    triggerLevelUp();
+                } else {
+                    loadNewRound();
+                }
+            }, 3000);
+        }
+
+        // Level Up Routine
+        function triggerLevelUp() {
+            STATE.streak = 0;
+            if (STATE.currentLevel < 3) {
+                STATE.currentLevel++;
+            } else {
+                STATE.currentLevel = 3;
+            }
+
+            audioSynth.playLevelUp();
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+            
+            setTimeout(() => {
+                confetti({ particleCount: 80, spread: 90, origin: { x: 0.2, y: 0.5 } });
+            }, 250);
+            setTimeout(() => {
+                confetti({ particleCount: 80, spread: 90, origin: { x: 0.8, y: 0.5 } });
+            }, 500);
+
+            levelupBadgeText.textContent = `Level ${STATE.currentLevel}!`;
+            levelupOverlay.classList.add('active');
+            
+            speechManager.speak(`Super-duper! You made it to Level ${STATE.currentLevel}!`);
+            
+            setTimeout(() => {
+                levelupOverlay.classList.remove('active');
+                loadNewRound();
+            }, 3200);
+        }
+
+        // Bind AAC panel clicks
+        btnEat.addEventListener('click', () => handleAacTap('verb', 'EAT'));
+        btnJump.addEventListener('click', () => handleAacTap('verb', 'JUMP'));
+        btnStop.addEventListener('click', () => handleAacTap('verb', 'STOP'));
+        
+        btnLeaf.addEventListener('click', () => handleAacTap('noun', 'LEAF'));
+        btnBall.addEventListener('click', () => handleAacTap('noun', 'BALL'));
+        btnRock.addEventListener('click', () => handleAacTap('noun', 'ROCK'));
+
+        btnMake.addEventListener('click', () => handleAacTap('starter', 'MAKE'));
+        btnDinoEat.addEventListener('click', () => handleAacTap('noun', 'DINO EAT'));
+        btnDinoJump.addEventListener('click', () => handleAacTap('noun', 'DINO JUMP'));
+
+        // Prevent tablet context menus
+        window.addEventListener('contextmenu', e => e.preventDefault());
+
+        // --- Toddler Lock Settings Dashboard (2s Hold Pointer Down) ---
+        let holdTimer = null;
+        function startHold(e) {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            e.preventDefault();
+            settingsTrigger.classList.add('holding');
+            holdTimer = setTimeout(() => {
+                endHold();
+                openParentDashboard();
+            }, 2000);
+        }
+        function cancelHold() {
+            if (holdTimer) {
+                clearTimeout(holdTimer);
+                holdTimer = null;
+            }
+            settingsTrigger.classList.remove('holding');
+        }
+        function endHold() {
+            cancelHold();
+        }
+
+        settingsTrigger.addEventListener('dragstart', e => e.preventDefault());
+        settingsTrigger.addEventListener('pointerdown', startHold);
+        window.addEventListener('pointerup', cancelHold);
+        window.addEventListener('pointercancel', cancelHold);
+
+        // --- Parent Settings Logic ---
+        function openParentDashboard() {
+            document.querySelectorAll('[data-level]').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.level) === STATE.currentLevel);
+            });
+            document.querySelectorAll('[data-dino]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.dino === STATE.currentDino);
+            });
+            
+            toggleSoundBtn.classList.toggle('enabled', STATE.soundEnabled);
+            toggleSpeechBtn.classList.toggle('enabled', STATE.speechEnabled);
+            
+            audioSynth.init();
+            settingsModal.classList.add('active');
+        }
+
+        document.querySelectorAll('[data-level]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.currentLevel = parseInt(btn.dataset.level);
+                STATE.streak = 0;
+                document.querySelectorAll('[data-level]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('[data-dino]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.currentDino = btn.dataset.dino;
+                document.querySelectorAll('[data-dino]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Toggle visible SVGs
+                document.getElementById('svg-trex').style.display = STATE.currentDino === 'trex' ? 'block' : 'none';
+                document.getElementById('svg-triceratops').style.display = STATE.currentDino === 'triceratops' ? 'block' : 'none';
+                document.getElementById('svg-brachiosaurus').style.display = STATE.currentDino === 'brachiosaurus' ? 'block' : 'none';
+            });
+        });
+
+        toggleSoundBtn.addEventListener('click', () => {
+            STATE.soundEnabled = !STATE.soundEnabled;
+            toggleSoundBtn.classList.toggle('enabled', STATE.soundEnabled);
+            if (STATE.soundEnabled) audioSynth.playTone(600, 'sine', 0.1);
+        });
+
+        toggleSpeechBtn.addEventListener('click', () => {
+            STATE.speechEnabled = !STATE.speechEnabled;
+            toggleSpeechBtn.classList.toggle('enabled', STATE.speechEnabled);
+        });
+
+        modalCloseBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('active');
+            loadNewRound();
+        });
+
+        // Initialize App
+        welcomePlayBtn.addEventListener('click', () => {
+            audioSynth.init();
+            speechManager.init();
+            welcomeOverlay.classList.add('hidden');
+            audioSynth.playSuccess();
+            speechManager.speak("Let's play!");
+            setTimeout(loadNewRound, 300);
+        });
+    </script>
+</body>
+</html>

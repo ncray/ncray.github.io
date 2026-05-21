@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Where is Donald Duck? - Spatial Prepositions Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-color: hsl(200, 60%, 97%);       /* Soft sky blue pastel */
+            --primary: hsl(205, 80%, 45%);        /* Strong friendly blue */
+            --secondary: hsl(38, 100%, 50%);      /* Warm golden yellow */
+            --pink: hsl(330, 90%, 65%);           /* Cheerful pink */
+            --text-color: hsl(205, 30%, 20%);     /* Soft navy, no harsh black */
+            --slate: hsl(200, 15%, 45%);
+            
+            --border-radius: 28px;
+            --font-family: 'Fredoka', sans-serif;
+            
+            /* Preposition Card styling */
+            --color-card: hsl(150, 75%, 40%);
+            --color-card-shadow: hsl(150, 75%, 28%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(hsl(200, 50%, 92%) 2px, transparent 2px);
+            background-size: 36px 36px;
+            font-family: var(--font-family);
+            color: var(--text-color);
+        }
+
+        #app-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 16px 24px 24px 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* --- Header Section --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            z-index: 10;
+        }
+
+        .score-box {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary);
+            text-shadow: 2px 2px 0px hsl(38, 100%, 32%);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .score-star {
+            display: inline-block;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .score-star.pop {
+            transform: scale(1.3) rotate(15deg);
+        }
+
+        .streak-tracker {
+            display: flex;
+            gap: 6px;
+            background-color: hsla(200, 40%, 90%, 0.8);
+            padding: 6px 12px;
+            border-radius: 50px;
+            border: 2px solid white;
+        }
+
+        .streak-star {
+            font-size: 1.3rem;
+            color: hsl(200, 15%, 80%);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .streak-star.active {
+            color: var(--secondary);
+            text-shadow: 1px 2px 0px hsl(38, 100%, 32%);
+            transform: scale(1.2);
+        }
+
+        /* Toddler Lock Settings trigger */
+        .settings-btn-trigger {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: hsla(200, 20%, 80%, 0.4);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+        }
+        
+        .settings-btn-trigger svg {
+            width: 24px;
+            height: 24px;
+            fill: hsl(200, 20%, 50%);
+            transition: transform 0.5s ease;
+            pointer-events: none;
+        }
+
+        .settings-progress-ring {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 3px solid var(--pink);
+            border-color: var(--pink) transparent transparent transparent;
+            opacity: 0;
+            transform: rotate(0deg);
+            pointer-events: none;
+        }
+        
+        .settings-btn-trigger.holding .settings-progress-ring {
+            opacity: 1;
+            animation: spinProgress 2s linear forwards;
+        }
+        
+        @keyframes spinProgress {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- Main Arena & Layout --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            gap: 15px;
+            position: relative;
+        }
+
+        #level-badge {
+            background-color: var(--pink);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 50px;
+            box-shadow: 0 4px 0 hsl(330, 90%, 50%);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        #prompt-text {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            text-align: center;
+            min-height: 45px;
+            max-width: 800px;
+        }
+
+        /* --- Prominent Stage --- */
+        #stage-container {
+            width: 100%;
+            max-width: 650px;
+            height: 250px;
+            background: white;
+            border-radius: 36px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04), inset 0 -4px 0 hsl(200, 20%, 90%);
+            border: 4px solid white;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: visible;
+        }
+
+        /* Central Props */
+        .stage-prop {
+            width: 220px;
+            height: 140px;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            margin-left: -110px;
+            z-index: 10;
+            transition: all 0.5s ease;
+        }
+
+        /* Characters SVG Containers */
+        .character-container {
+            width: 80px;
+            height: 90px;
+            position: absolute;
+            left: calc(50% - 40px);
+            cursor: pointer;
+            z-index: 15;
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform-origin: center bottom;
+        }
+
+        /* Character state positioning wrappers */
+        .pos-on {
+            bottom: 150px;
+            z-index: 15;
+        }
+        .pos-under {
+            bottom: 5px;
+            z-index: 5;
+            opacity: 0.85;
+        }
+        .pos-in {
+            bottom: 60px;
+            z-index: 8;
+        }
+        .pos-behind {
+            bottom: 95px;
+            z-index: 5;
+            opacity: 0.75;
+        }
+
+        /* Peeking displacement offsets to ensure they are visible under/behind */
+        .character-container.offset-left {
+            left: calc(50% - 130px);
+        }
+        .character-container.offset-right {
+            left: calc(50% + 50px);
+        }
+
+        /* Character Animations */
+        .bounce-breath {
+            animation: breathe 2s ease-in-out infinite;
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scaleY(1) translateY(0); }
+            50% { transform: scaleY(1.04) translateY(-3px); }
+        }
+
+        /* Happy tap jump/spin dance */
+        .anim-happy {
+            animation: danceCelebration 1.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+        }
+        @keyframes danceCelebration {
+            0% { transform: scale(1) translateY(0) rotate(0deg); }
+            20% { transform: scale(1.1) translateY(-40px) rotate(15deg); }
+            45% { transform: scale(1.15) translateY(-40px) rotate(-15deg); }
+            70% { transform: scale(1.1) translateY(-25px) rotate(360deg); }
+            85% { transform: scale(0.95) translateY(0) rotate(360deg); }
+            100% { transform: scale(1) translateY(0) rotate(360deg); }
+        }
+
+        /* Gentler wrong head shake */
+        .anim-wrong {
+            animation: gentleShake 0.4s ease-in-out;
+        }
+        @keyframes gentleShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px) rotate(-4deg); }
+            75% { transform: translateX(8px) rotate(4deg); }
+        }
+
+        /* --- Level 3 Preposition Buttons --- */
+        #prep-choices-area {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 650px;
+            margin-top: 10px;
+        }
+
+        .prep-card {
+            flex: 1;
+            aspect-ratio: 2 / 1;
+            max-height: 85px;
+            border-radius: 20px;
+            border: none;
+            font-family: var(--font-family);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            position: relative;
+            outline: none;
+            transition: all 0.1s ease, opacity 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--color-card);
+            box-shadow: 0 8px 0 var(--color-card-shadow), 0 10px 15px rgba(0,0,0,0.12);
+        }
+
+        .prep-card:active:not(.disabled) {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 var(--color-card-shadow), 0 3px 5px rgba(0,0,0,0.12);
+        }
+
+        .prep-card.disabled {
+            opacity: 0.2;
+            filter: grayscale(80%);
+            cursor: not-allowed;
+            pointer-events: none;
+            transform: scale(0.95);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.05);
+        }
+
+        @keyframes cardPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 12px 0 var(--color-card-shadow), 0 14px 20px rgba(0,0,0,0.18); }
+            100% { transform: scale(1); }
+        }
+        .prep-card.guided-pulse {
+            animation: cardPulse 1.4s ease-in-out infinite;
+            z-index: 5;
+        }
+
+        /* --- Full Screen Welcome Overlay --- */
+        #welcome-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            z-index: 100;
+            padding: 30px;
+            text-align: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        #welcome-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .welcome-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 3px 3px 0px white, 5px 5px 0px rgba(0, 0, 0, 0.05);
+        }
+
+        .welcome-description {
+            font-size: 1.6rem;
+            max-width: 500px;
+            color: var(--text-color);
+            line-height: 1.4;
+        }
+
+        .play-btn {
+            font-family: var(--font-family);
+            font-size: 3rem;
+            font-weight: 700;
+            color: white;
+            background-color: var(--pink);
+            border: none;
+            padding: 24px 70px;
+            border-radius: 60px;
+            box-shadow: 0 14px 0 hsl(330, 90%, 50%), 0 20px 30px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .play-btn:active {
+            transform: translateY(10px);
+            box-shadow: 0 4px 0 hsl(330, 90%, 50%), 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* --- Parent Settings Dashboard Modal --- */
+        #settings-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #settings-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            width: 90%;
+            max-width: 520px;
+            background: white;
+            border-radius: 36px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+            border: 4px solid var(--primary);
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 2.2rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .setting-section {
+            margin-bottom: 24px;
+            border-bottom: 2px dashed hsl(200, 20%, 90%);
+            padding-bottom: 20px;
+        }
+        
+        .setting-section:last-of-type {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .setting-label {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .setting-option-btn {
+            flex: 1;
+            min-width: 70px;
+            font-family: var(--font-family);
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 10px 14px;
+            border-radius: 16px;
+            border: 2px solid hsl(200, 20%, 85%);
+            background-color: hsl(200, 30%, 97%);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .setting-option-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .setting-toggle-btn {
+            width: 100%;
+            font-family: var(--font-family);
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 12px;
+            border-radius: 16px;
+            border: 2px solid hsl(200, 20%, 85%);
+            background-color: hsl(200, 30%, 97%);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        
+        .setting-toggle-btn.enabled {
+            background-color: hsla(150, 75%, 45%, 0.15);
+            border-color: hsl(150, 75%, 35%);
+            color: hsl(150, 75%, 35%);
+        }
+
+        .setting-toggle-indicator {
+            width: 48px;
+            height: 26px;
+            background-color: hsl(200, 10%, 80%);
+            border-radius: 50px;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+        
+        .setting-toggle-indicator::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            transition: transform 0.2s;
+        }
+        
+        .setting-toggle-btn.enabled .setting-toggle-indicator {
+            background-color: hsl(150, 75%, 35%);
+        }
+        
+        .setting-toggle-btn.enabled .setting-toggle-indicator::after {
+            transform: translateX(22px);
+        }
+
+        .modal-close-btn {
+            width: 100%;
+            font-family: var(--font-family);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            background-color: hsl(150, 75%, 35%);
+            border: none;
+            padding: 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 hsl(150, 75%, 20%), 0 8px 15px rgba(0,0,0,0.15);
+            transition: transform 0.1s;
+            margin-top: 10px;
+        }
+
+        .modal-close-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 hsl(150, 75%, 20%), 0 2px 5px rgba(0,0,0,0.15);
+        }
+
+        /* --- Level-Up Celebration Overlay --- */
+        #levelup-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        
+        #levelup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .levelup-badge-giant {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: white;
+            background-color: var(--pink);
+            padding: 10px 24px;
+            border-radius: 50px;
+            box-shadow: 0 6px 0 hsl(330, 90%, 50%);
+            margin-bottom: 20px;
+            animation: levelUpBounce 0.8s infinite alternate;
+        }
+
+        .levelup-text {
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 2px 4px 0px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        
+        @keyframes levelUpBounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-15px); }
+        }
+
+        /* --- Responsive Layout for Mobile --- */
+        @media (max-width: 600px) {
+            #app-container {
+                padding: 10px 12px 12px 12px;
+            }
+            #prompt-text {
+                font-size: 1.4rem;
+            }
+            #stage-container {
+                height: 190px;
+                border-radius: 24px;
+            }
+            .stage-prop {
+                width: 140px;
+                height: 90px;
+                bottom: 15px;
+                left: 50%;
+                margin-left: -70px;
+            }
+            .character-container {
+                width: 55px;
+                height: 62px;
+                left: calc(50% - 27.5px);
+            }
+            .pos-on {
+                bottom: 100px;
+            }
+            .pos-under {
+                bottom: 5px;
+            }
+            .pos-in {
+                bottom: 40px;
+            }
+            .pos-behind {
+                bottom: 60px;
+            }
+            .character-container.offset-left {
+                left: calc(50% - 77.5px);
+            }
+            .character-container.offset-right {
+                left: calc(50% + 22.5px);
+            }
+            #prep-choices-area {
+                gap: 8px;
+            }
+            .prep-card {
+                font-size: 1rem;
+                border-radius: 12px;
+                box-shadow: 0 5px 0 var(--color-card-shadow);
+            }
+            .welcome-title {
+                font-size: 2.2rem;
+            }
+            .welcome-description {
+                font-size: 1.1rem;
+            }
+            .play-btn {
+                font-size: 2rem;
+                padding: 16px 40px;
+            }
+            .levelup-text {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Start Overlay -->
+    <div id="welcome-overlay">
+        <h1 class="welcome-title">Where is Donald Duck? 🦆</h1>
+        <p class="welcome-description">Hi Caleb! Let's find Donald and Goofy! Listen to the questions and tap the right character!</p>
+        <button class="play-btn" id="welcome-play-btn">Play 🚀</button>
+    </div>
+
+    <!-- Hidden Settings Dashboard (Parent Lock: 2s hold) -->
+    <div id="settings-modal">
+        <div class="modal-card">
+            <h2 class="modal-title">⚙️ Parent Dashboard</h2>
+            
+            <!-- Manual Level -->
+            <div class="setting-section">
+                <span class="setting-label">Manually Set Level</span>
+                <div class="btn-group">
+                    <button class="setting-option-btn" data-level="1">Level 1<br><small>Find Donald</small></button>
+                    <button class="setting-option-btn" data-level="2">Level 2<br><small>Forced Choice</small></button>
+                    <button class="setting-option-btn" data-level="3">Level 3<br><small>Symbol Matching</small></button>
+                </div>
+            </div>
+
+            <!-- Central Object Selection -->
+            <div class="setting-section">
+                <span class="setting-label">Central Object</span>
+                <div class="btn-group">
+                    <button class="setting-option-btn" data-object="car">🚗 Red Car</button>
+                    <button class="setting-option-btn" data-object="box">📦 Blue Box</button>
+                    <button class="setting-option-btn" data-object="bed">🛏️ Green Bed</button>
+                </div>
+            </div>
+
+            <!-- Audio Settings -->
+            <div class="setting-section">
+                <span class="setting-label">Audio Settings</span>
+                <button class="setting-toggle-btn enabled" id="toggle-sound">
+                    Sound Effects (Chimes)
+                    <div class="setting-toggle-indicator"></div>
+                </button>
+                <button class="setting-toggle-btn enabled" id="toggle-speech">
+                    Voice Prompts (Speech)
+                    <div class="setting-toggle-indicator"></div>
+                </button>
+            </div>
+
+            <button class="modal-close-btn" id="modal-close-btn">Done 🌟</button>
+        </div>
+    </div>
+
+    <!-- Level-Up Modal -->
+    <div id="levelup-overlay">
+        <div class="levelup-badge-giant" id="levelup-badge-text">Level 2!</div>
+        <div class="levelup-text">Preposition Expert! 🎉</div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app-container">
+        
+        <header>
+            <div class="score-box" id="score-display">⭐ <span class="score-star" id="score-val">0</span></div>
+            
+            <div class="streak-tracker">
+                <span class="streak-star" id="streak-1">★</span>
+                <span class="streak-star" id="streak-2">★</span>
+                <span class="streak-star" id="streak-3">★</span>
+                <span class="streak-star" id="streak-4">★</span>
+                <span class="streak-star" id="streak-5">★</span>
+                <span class="streak-star" id="streak-6">★</span>
+                <span class="streak-star" id="streak-7">★</span>
+                <span class="streak-star" id="streak-8">★</span>
+            </div>
+            
+            <div class="settings-btn-trigger" id="settings-trigger">
+                <div class="settings-progress-ring"></div>
+                <svg viewBox="0 0 24 24">
+                    <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.04,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                </svg>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main>
+            <div id="level-badge">Level 1</div>
+            <h1 id="prompt-text">Donald is ON the car. Tap Donald!</h1>
+            
+            <!-- Stage Area -->
+            <div id="stage-container">
+                <!-- Prominent Stage Props -->
+                
+                <!-- Red Car -->
+                <svg id="prop-car" class="stage-prop" viewBox="0 0 100 60" style="display: none;">
+                    <path d="M 15,40 H 85 V 25 H 70 L 58,12 H 34 L 22,25 H 15 Z" fill="crimson"/>
+                    <!-- Windows -->
+                    <polygon points="36,15 54,15 54,23 36,23" fill="lightblue"/>
+                    <!-- Wheels -->
+                    <circle cx="30" cy="40" r="10" fill="#333"/>
+                    <circle cx="30" cy="40" r="4" fill="silver"/>
+                    <circle cx="70" cy="40" r="10" fill="#333"/>
+                    <circle cx="70" cy="40" r="4" fill="silver"/>
+                </svg>
+
+                <!-- Blue Box -->
+                <svg id="prop-box" class="stage-prop" viewBox="0 0 100 70" style="display: none;">
+                    <rect x="15" y="15" width="70" height="45" rx="4" fill="royalblue"/>
+                    <polygon points="10,15 90,15 85,8 15,8" fill="#1e88e5"/> <!-- Lid -->
+                    <rect x="42" y="28" width="16" height="12" rx="2" fill="white" opacity="0.6"/> <!-- Symbol slot -->
+                </svg>
+
+                <!-- Green Bed -->
+                <svg id="prop-bed" class="stage-prop" viewBox="0 0 120 70" style="display: none;">
+                    <!-- Headboard -->
+                    <rect x="10" y="10" width="8" height="50" rx="3" fill="#8d6e63"/>
+                    <!-- Footboard -->
+                    <rect x="102" y="25" width="8" height="35" rx="3" fill="#8d6e63"/>
+                    <!-- Bed frame mattress -->
+                    <rect x="18" y="28" width="84" height="20" rx="2" fill="#81c784"/>
+                    <!-- Pillow -->
+                    <rect x="22" y="20" width="18" height="10" rx="3" fill="white"/>
+                </svg>
+
+                <!-- Draggable/Tappable Characters -->
+                <!-- Donald Duck -->
+                <div class="character-container bounce-breath" id="char-donald">
+                    <svg viewBox="0 0 60 70" width="100%" height="100%">
+                        <!-- Shadow -->
+                        <ellipse cx="30" cy="65" rx="16" ry="4" fill="rgba(0,0,0,0.15)"/>
+                        
+                        <!-- Body -->
+                        <ellipse cx="30" cy="45" rx="14" ry="12" fill="white" stroke="#ccc" stroke-width="1"/>
+                        
+                        <!-- Blue sailor collar -->
+                        <path d="M 20,40 L 40,40 L 30,48 Z" fill="royalblue"/>
+                        <circle cx="30" cy="48" r="2.5" fill="gold"/>
+                        
+                        <!-- Head -->
+                        <circle cx="30" cy="24" r="13" fill="white" stroke="#ccc" stroke-width="1"/>
+                        
+                        <!-- Duck Beak -->
+                        <path d="M 16,24 Q 30,12 44,24 Q 30,34 16,24 Z" fill="orange"/>
+                        <path d="M 22,24 Q 30,28 38,24" stroke="darkorange" stroke-width="1.5" fill="none"/>
+                        
+                        <!-- Eyes -->
+                        <ellipse cx="24" cy="18" rx="2.5" ry="4.5" fill="white" stroke="#ccc" stroke-width="0.5"/>
+                        <circle cx="24" cy="18" r="1.5" fill="blue"/>
+                        <circle cx="24" cy="17" r="0.75" fill="white"/>
+
+                        <ellipse cx="36" cy="18" rx="2.5" ry="4.5" fill="white" stroke="#ccc" stroke-width="0.5"/>
+                        <circle cx="36" cy="18" r="1.5" fill="blue"/>
+                        <circle cx="36" cy="17" r="0.75" fill="white"/>
+                        
+                        <!-- Sailor Hat -->
+                        <path d="M 18,13 Q 30,6 42,13 Z" fill="royalblue"/>
+                        <rect x="26" y="5" width="8" height="4" fill="black"/> <!-- Ribbon -->
+                    </svg>
+                </div>
+
+                <!-- Goofy -->
+                <div class="character-container bounce-breath" id="char-goofy" style="display: none;">
+                    <svg viewBox="0 0 60 85" width="100%" height="100%">
+                        <!-- Shadow -->
+                        <ellipse cx="30" cy="80" rx="16" ry="4" fill="rgba(0,0,0,0.15)"/>
+                        
+                        <!-- Body (Shirt) -->
+                        <ellipse cx="30" cy="60" rx="13" ry="12" fill="#ff9800"/>
+                        <!-- Vest -->
+                        <path d="M19,50 L24,68 L36,68 L41,50 Z" fill="#3e2723"/>
+                        
+                        <!-- Head -->
+                        <ellipse cx="30" cy="34" rx="11" ry="12" fill="#5d4037"/>
+                        
+                        <!-- Snout -->
+                        <ellipse cx="30" cy="38" rx="14" ry="7" fill="#ffe0b2"/>
+                        <!-- Black nose -->
+                        <ellipse cx="30" cy="34" rx="4" ry="2.5" fill="black"/>
+                        
+                        <!-- Teeth -->
+                        <rect x="25" y="44" width="4" height="4" fill="white" rx="1"/>
+                        <rect x="31" y="44" width="4" height="4" fill="white" rx="1"/>
+                        
+                        <!-- Eyes -->
+                        <ellipse cx="25" cy="24" rx="2.5" ry="5.5" fill="white"/>
+                        <circle cx="25" cy="24" r="1.5" fill="black"/>
+                        <ellipse cx="35" cy="24" rx="2.5" ry="5.5" fill="white"/>
+                        <circle cx="35" cy="24" r="1.5" fill="black"/>
+                        
+                        <!-- Long floppy ears -->
+                        <path d="M 19,30 Q 8,45 8,62 Q 13,60 19,38 Z" fill="black"/>
+                        <path d="M 41,30 Q 52,45 52,62 Q 47,60 41,38 Z" fill="black"/>
+                        
+                        <!-- Goofy's Green Tall Hat -->
+                        <path d="M 22,22 L 38,22 L 36,8 L 24,8 Z" fill="green"/>
+                        <rect x="20" y="20" width="20" height="3" rx="1.5" fill="black"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Level 3 Preposition Card Area -->
+            <div id="prep-choices-area" style="display: none;">
+                <button class="prep-card" id="btn-prep-1">ON 🟢</button>
+                <button class="prep-card" id="btn-prep-2">UNDER 🔵</button>
+            </div>
+        </main>
+        
+    </div>
+
+    <script>
+        // --- Game Setup Data & State ---
+        const PREPOSITIONS = ['ON', 'UNDER', 'IN', 'BEHIND'];
+        
+        const STATE = {
+            score: 0,
+            streak: 0,
+            currentLevel: 1, // 1: Guided receptive, 2: Forced Choice, 3: Symbol Match
+            currentObject: 'car', // car, box, bed
+            soundEnabled: true,
+            speechEnabled: true,
+            isWaitingInput: false,
+
+            // Active round details
+            targetCharacter: 'donald', // donald, goofy
+            targetPrep: 'ON',
+            leftCharacter: 'donald',
+            rightCharacter: 'goofy',
+            correctAnswer: 'donald' // or correct prep label
+        };
+
+        // DOM elements
+        const welcomeOverlay = document.getElementById('welcome-overlay');
+        const welcomePlayBtn = document.getElementById('welcome-play-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsTrigger = document.getElementById('settings-trigger');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        
+        const scoreVal = document.getElementById('score-val');
+        const levelBadge = document.getElementById('level-badge');
+        const promptText = document.getElementById('prompt-text');
+        
+        const stageContainer = document.getElementById('stage-container');
+        const propCar = document.getElementById('prop-car');
+        const propBox = document.getElementById('prop-box');
+        const propBed = document.getElementById('prop-bed');
+
+        const charDonald = document.getElementById('char-donald');
+        const charGoofy = document.getElementById('char-goofy');
+
+        const prepChoicesArea = document.getElementById('prep-choices-area');
+        const btnPrep1 = document.getElementById('btn-prep-1');
+        const btnPrep2 = document.getElementById('btn-prep-2');
+
+        const toggleSoundBtn = document.getElementById('toggle-sound');
+        const toggleSpeechBtn = document.getElementById('toggle-speech');
+        
+        const levelupOverlay = document.getElementById('levelup-overlay');
+        const levelupBadgeText = document.getElementById('levelup-badge-text');
+
+        // --- Custom Audio Synthesizer ---
+        class WebAudioSynth {
+            constructor() { this.ctx = null; }
+            init() {
+                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+            }
+            playTone(freq, type, duration, delay = 0, volume = 0.15) {
+                if (!STATE.soundEnabled) return;
+                this.init();
+                setTimeout(() => {
+                    const osc = this.ctx.createOscillator();
+                    const gainNode = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gainNode.gain.setValueAtTime(0, this.ctx.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(volume, this.ctx.currentTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gainNode);
+                    gainNode.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                }, delay * 1000);
+            }
+            playSuccess() {
+                this.playTone(523.25, 'triangle', 0.5, 0.0, 0.18);
+                this.playTone(659.25, 'triangle', 0.5, 0.08, 0.18);
+                this.playTone(783.99, 'triangle', 0.5, 0.16, 0.18);
+                this.playTone(1046.50, 'triangle', 0.6, 0.24, 0.18);
+            }
+            playIncorrect() {
+                this.playTone(220.00, 'sine', 0.25, 0.0, 0.22);
+            }
+            playLevelUp() {
+                const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50];
+                notes.forEach((freq, idx) => {
+                    this.playTone(freq, 'triangle', 0.4, idx * 0.08, 0.15);
+                });
+            }
+        }
+        const audioSynth = new WebAudioSynth();
+
+        // --- Custom Speech Synthesizer ---
+        const speechManager = {
+            synth: window.speechSynthesis,
+            voices: [],
+            activeUtterances: new Set(),
+            init() {
+                if (!this.synth) return;
+                this.voices = this.synth.getVoices();
+                if (speechSynthesis.onvoiceschanged !== undefined) {
+                    speechSynthesis.onvoiceschanged = () => {
+                        this.voices = this.synth.getVoices();
+                    };
+                }
+            },
+            speak(text, callback = null) {
+                if (!STATE.speechEnabled) {
+                    if (callback) callback();
+                    return;
+                }
+                if (!this.synth) {
+                    if (callback) callback();
+                    return;
+                }
+                try {
+                    if (this.synth.speaking) this.synth.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.pitch = 1.35;
+                    utterance.rate = 0.82;
+                    const preferredVoice = this.voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Samantha')));
+                    if (preferredVoice) utterance.voice = preferredVoice;
+                    this.activeUtterances.add(utterance);
+                    const cleanUp = () => {
+                        this.activeUtterances.delete(utterance);
+                        if (callback) callback();
+                    };
+                    utterance.onend = cleanUp;
+                    utterance.onerror = cleanUp;
+                    this.synth.speak(utterance);
+                } catch (e) {
+                    console.warn("Speech Synthesis error:", e);
+                    if (callback) callback();
+                }
+            }
+        };
+        speechManager.init();
+
+        // --- Game Flow Methods ---
+        function updateStreakStars() {
+            for (let i = 1; i <= 8; i++) {
+                const star = document.getElementById(`streak-${i}`);
+                if (STATE.streak >= i) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            }
+        }
+
+        // Apply physical positioning layout style classes based on preposition value
+        function applyPosition(charEl, prep, offsetDirection = '') {
+            // Clean positioning classes
+            charEl.className = 'character-container bounce-breath';
+            
+            if (offsetDirection === 'left') charEl.classList.add('offset-left');
+            if (offsetDirection === 'right') charEl.classList.add('offset-right');
+
+            const lowerPrep = prep.toLowerCase();
+            charEl.classList.add(`pos-${lowerPrep}`);
+        }
+
+        function loadNewRound() {
+            STATE.isWaitingInput = false;
+            updateStreakStars();
+            
+            levelBadge.textContent = `Level ${STATE.currentLevel}`;
+            
+            // Clean animations & triggers
+            charDonald.className = 'character-container bounce-breath';
+            charGoofy.className = 'character-container bounce-breath';
+            btnPrep1.className = 'prep-card';
+            btnPrep2.className = 'prep-card';
+
+            // Show active central object prop
+            propCar.style.display = STATE.currentObject === 'car' ? 'block' : 'none';
+            propBox.style.display = STATE.currentObject === 'box' ? 'block' : 'none';
+            propBed.style.display = STATE.currentObject === 'bed' ? 'block' : 'none';
+
+            const objLabel = STATE.currentObject === 'car' ? 'car' : STATE.currentObject === 'box' ? 'box' : 'bed';
+
+            if (STATE.currentLevel === 1) {
+                // LEVEL 1: Guided identification (Only 1 character on screen)
+                charDonald.style.display = 'block';
+                charGoofy.style.display = 'none';
+                prepChoicesArea.style.display = 'none';
+
+                // Random preposition
+                STATE.targetPrep = PREPOSITIONS[Math.floor(Math.random() * PREPOSITIONS.length)];
+                applyPosition(charDonald, STATE.targetPrep);
+
+                const promptStr = `Donald is ${STATE.targetPrep} the ${objLabel}. Tap Donald!`;
+                promptText.textContent = promptStr;
+                
+                STATE.isWaitingInput = true;
+                speechManager.speak(promptStr);
+
+            } else if (STATE.currentLevel === 2) {
+                // LEVEL 2: Forced Choice symbol mapping (Both characters peeking at different prepositions)
+                charDonald.style.display = 'block';
+                charGoofy.style.display = 'block';
+                prepChoicesArea.style.display = 'none';
+
+                // Pick two distinct prepositions
+                const preps = [...PREPOSITIONS].sort(() => Math.random() - 0.5);
+                const prepA = preps[0];
+                const prepB = preps[1];
+
+                // Randomly assign characters to spots
+                const donaldFirst = Math.random() < 0.5;
+                if (donaldFirst) {
+                    applyPosition(charDonald, prepA, 'left');
+                    applyPosition(charGoofy, prepB, 'right');
+                    
+                    // Randomly select one target preposition question
+                    const chooseA = Math.random() < 0.5;
+                    STATE.targetPrep = chooseA ? prepA : prepB;
+                    STATE.correctAnswer = chooseA ? 'donald' : 'goofy';
+                } else {
+                    applyPosition(charGoofy, prepA, 'left');
+                    applyPosition(charDonald, prepB, 'right');
+                    
+                    const chooseA = Math.random() < 0.5;
+                    STATE.targetPrep = chooseA ? prepA : prepB;
+                    STATE.correctAnswer = chooseA ? 'goofy' : 'donald';
+                }
+
+                const promptStr = `Who is ${STATE.targetPrep} the ${objLabel}?`;
+                promptText.textContent = promptStr;
+                
+                STATE.isWaitingInput = true;
+                speechManager.speak(promptStr);
+
+            } else if (STATE.currentLevel === 3) {
+                // LEVEL 3: Symbol-Preposition Matching (Character is in a spot, user chooses the preposition button)
+                charDonald.style.display = 'block';
+                charGoofy.style.display = 'none';
+                prepChoicesArea.style.display = 'flex';
+
+                STATE.targetPrep = PREPOSITIONS[Math.floor(Math.random() * PREPOSITIONS.length)];
+                applyPosition(charDonald, STATE.targetPrep);
+
+                // Build option button pairings (Correct preposition + 1 Distractor)
+                const distractors = PREPOSITIONS.filter(p => p !== STATE.targetPrep);
+                const distractor = distractors[Math.floor(Math.random() * distractors.length)];
+
+                const leftCorrect = Math.random() < 0.5;
+                if (leftCorrect) {
+                    btnPrep1.textContent = STATE.targetPrep;
+                    btnPrep2.textContent = distractor;
+                    STATE.correctAnswer = 'prep1';
+                } else {
+                    btnPrep1.textContent = distractor;
+                    btnPrep2.textContent = STATE.targetPrep;
+                    STATE.correctAnswer = 'prep2';
+                }
+
+                // Add guide heartbeat pulse to correct option
+                const correctBtn = leftCorrect ? btnPrep1 : btnPrep2;
+                correctBtn.classList.add('guided-pulse');
+
+                const promptStr = `Donald is ${STATE.targetPrep} the ${objLabel}. Tap ${STATE.targetPrep}!`;
+                promptText.textContent = promptStr;
+
+                STATE.isWaitingInput = true;
+                speechManager.speak(promptStr);
+            }
+        }
+
+        // Tap Handlers
+        function handleCharacterTap(charId) {
+            if (!STATE.isWaitingInput) return;
+            const tappedEl = charId === 'donald' ? charDonald : charGoofy;
+
+            if (STATE.currentLevel === 1) {
+                // Level 1: Caleb taps Donald (always correct)
+                triggerSuccessDance(charDonald, "Oh boy! Oh boy! Quack!");
+            } else if (STATE.currentLevel === 2) {
+                // Level 2: Caleb must tap the correct character
+                if (charId === STATE.correctAnswer) {
+                    const catchphrase = charId === 'donald' ? "Quack! You found me!" : "Gwarsh! Here I am!";
+                    triggerSuccessDance(tappedEl, catchphrase);
+                } else {
+                    triggerIncorrectFeedback(tappedEl);
+                }
+            }
+        }
+
+        function handlePrepCardTap(btnId) {
+            if (!STATE.isWaitingInput) return;
+            const clickedBtn = btnId === 'prep1' ? btnPrep1 : btnPrep2;
+
+            if (btnId === STATE.correctAnswer) {
+                btnPrep1.classList.remove('guided-pulse');
+                btnPrep2.classList.remove('guided-pulse');
+                
+                audioSynth.playTone(392.00, 'sine', 0.12, 0, 0.1);
+                audioSynth.playTone(523.25, 'sine', 0.15, 0.06, 0.1);
+                
+                triggerSuccessDance(charDonald, `${STATE.targetPrep}! Awesome job!`);
+            } else {
+                clickedBtn.classList.add('anim-wrong');
+                audioSynth.playIncorrect();
+                setTimeout(() => clickedBtn.classList.remove('anim-wrong'), 400);
+            }
+        }
+
+        // Success Celebration triggers
+        function triggerSuccessDance(charEl, speechText) {
+            STATE.isWaitingInput = false;
+            
+            // Hop and spin character
+            charEl.classList.remove('bounce-breath');
+            charEl.classList.add('anim-happy');
+
+            // Sound
+            audioSynth.playSuccess();
+
+            // Confetti
+            const bounds = charEl.getBoundingClientRect();
+            const originX = (bounds.left + bounds.width / 2) / window.innerWidth;
+            const originY = (bounds.top + bounds.height / 2) / window.innerHeight;
+            confetti({
+                particleCount: 80,
+                spread: 60,
+                origin: { x: originX, y: originY },
+                colors: ['#03a9f4', '#4caf50', '#ffeb3b', '#e91e63']
+            });
+
+            // Score stars
+            STATE.score++;
+            scoreVal.textContent = STATE.score;
+            scoreVal.classList.add('pop');
+            setTimeout(() => scoreVal.classList.remove('pop'), 300);
+
+            STATE.streak++;
+            updateStreakStars();
+
+            // Speech
+            speechManager.speak(speechText);
+
+            // Delay reload
+            setTimeout(() => {
+                charEl.classList.remove('anim-happy');
+                charEl.classList.add('bounce-breath');
+                
+                if (STATE.streak >= 8) {
+                    triggerLevelUp();
+                } else {
+                    loadNewRound();
+                }
+            }, 2200);
+        }
+
+        function triggerIncorrectFeedback(charEl) {
+            STATE.isWaitingInput = false;
+            charEl.classList.add('anim-wrong');
+            audioSynth.playIncorrect();
+            
+            // Reset streak
+            STATE.streak = 0;
+            updateStreakStars();
+
+            setTimeout(() => {
+                charEl.classList.remove('anim-wrong');
+                STATE.isWaitingInput = true;
+            }, 400);
+        }
+
+        // Level Up celebratory routine
+        function triggerLevelUp() {
+            STATE.streak = 0;
+            if (STATE.currentLevel < 3) {
+                STATE.currentLevel++;
+            } else {
+                STATE.currentLevel = 3;
+            }
+
+            audioSynth.playLevelUp();
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+            
+            setTimeout(() => {
+                confetti({ particleCount: 80, spread: 90, origin: { x: 0.2, y: 0.5 } });
+            }, 250);
+            setTimeout(() => {
+                confetti({ particleCount: 80, spread: 90, origin: { x: 0.8, y: 0.5 } });
+            }, 500);
+
+            levelupBadgeText.textContent = `Level ${STATE.currentLevel}!`;
+            levelupOverlay.classList.add('active');
+            
+            speechManager.speak(`Rawr-tastic! You made it to Level ${STATE.currentLevel}!`);
+            
+            setTimeout(() => {
+                levelupOverlay.classList.remove('active');
+                loadNewRound();
+            }, 3200);
+        }
+
+        // Tap Listeners
+        charDonald.addEventListener('click', () => handleCharacterTap('donald'));
+        charGoofy.addEventListener('click', () => handleCharacterTap('goofy'));
+
+        btnPrep1.addEventListener('click', () => handlePrepCardTap('prep1'));
+        btnPrep2.addEventListener('click', () => handlePrepCardTap('prep2'));
+
+        // Prevent tablet context menus
+        window.addEventListener('contextmenu', e => e.preventDefault());
+
+        // --- Toddler-Proof Settings Hold Panel (2s hold) ---
+        let holdTimer = null;
+        function startHold(e) {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            e.preventDefault();
+            settingsTrigger.classList.add('holding');
+            holdTimer = setTimeout(() => {
+                endHold();
+                openParentDashboard();
+            }, 2000);
+        }
+        function cancelHold() {
+            if (holdTimer) {
+                clearTimeout(holdTimer);
+                holdTimer = null;
+            }
+            settingsTrigger.classList.remove('holding');
+        }
+        function endHold() {
+            cancelHold();
+        }
+
+        settingsTrigger.addEventListener('dragstart', e => e.preventDefault());
+        settingsTrigger.addEventListener('pointerdown', startHold);
+        window.addEventListener('pointerup', cancelHold);
+        window.addEventListener('pointercancel', cancelHold);
+
+        // --- Settings Management ---
+        function openParentDashboard() {
+            document.querySelectorAll('[data-level]').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.level) === STATE.currentLevel);
+            });
+            document.querySelectorAll('[data-object]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.object === STATE.currentObject);
+            });
+            
+            toggleSoundBtn.classList.toggle('enabled', STATE.soundEnabled);
+            toggleSpeechBtn.classList.toggle('enabled', STATE.speechEnabled);
+            
+            audioSynth.init();
+            settingsModal.classList.add('active');
+        }
+
+        document.querySelectorAll('[data-level]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.currentLevel = parseInt(btn.dataset.level);
+                STATE.streak = 0;
+                document.querySelectorAll('[data-level]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('[data-object]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.currentObject = btn.dataset.object;
+                document.querySelectorAll('[data-object]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        toggleSoundBtn.addEventListener('click', () => {
+            STATE.soundEnabled = !STATE.soundEnabled;
+            toggleSoundBtn.classList.toggle('enabled', STATE.soundEnabled);
+            if (STATE.soundEnabled) audioSynth.playTone(600, 'sine', 0.1);
+        });
+
+        toggleSpeechBtn.addEventListener('click', () => {
+            STATE.speechEnabled = !STATE.speechEnabled;
+            toggleSpeechBtn.classList.toggle('enabled', STATE.speechEnabled);
+        });
+
+        modalCloseBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('active');
+            loadNewRound();
+        });
+
+        // Initialize Game
+        welcomePlayBtn.addEventListener('click', () => {
+            audioSynth.init();
+            speechManager.init();
+            welcomeOverlay.classList.add('hidden');
+            audioSynth.playSuccess();
+            speechManager.speak("Let's play!");
+            setTimeout(loadNewRound, 300);
+        });
+    </script>
+</body>
+</html>

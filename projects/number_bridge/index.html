@@ -960,6 +960,7 @@
             activeUtterances: new Set(),
 
             init() {
+                if (!this.synth) return;
                 this.voices = this.synth.getVoices();
                 if (speechSynthesis.onvoiceschanged !== undefined) {
                     speechSynthesis.onvoiceschanged = () => {
@@ -973,35 +974,44 @@
                     if (callback) callback();
                     return;
                 }
-                
-                // Mute any current speech to prevent overlapping and remain snappy
-                if (this.synth.speaking) {
-                    this.synth.cancel();
-                }
-
-                const utterance = new SpeechSynthesisUtterance(text);
-                
-                // Fine-tuned child-like slow pacing and higher pitch
-                utterance.pitch = 1.35;
-                utterance.rate = 0.85;
-
-                // Bind English local voice if available
-                const preferredVoice = this.voices.find(v => v.lang.startsWith('en') && v.name.includes('Google') || v.name.includes('Samantha'));
-                if (preferredVoice) {
-                    utterance.voice = preferredVoice;
-                }
-
-                this.activeUtterances.add(utterance);
-
-                const cleanUp = () => {
-                    this.activeUtterances.delete(utterance);
+                if (!this.synth) {
                     if (callback) callback();
-                };
+                    return;
+                }
+                
+                try {
+                    // Mute any current speech to prevent overlapping and remain snappy
+                    if (this.synth.speaking) {
+                        this.synth.cancel();
+                    }
 
-                utterance.onend = cleanUp;
-                utterance.onerror = cleanUp;
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    
+                    // Fine-tuned child-like slow pacing and higher pitch
+                    utterance.pitch = 1.35;
+                    utterance.rate = 0.85;
 
-                this.synth.speak(utterance);
+                    // Bind English local voice if available
+                    const preferredVoice = this.voices.find(v => v.lang.startsWith('en') && v.name.includes('Google') || v.name.includes('Samantha'));
+                    if (preferredVoice) {
+                        utterance.voice = preferredVoice;
+                    }
+
+                    this.activeUtterances.add(utterance);
+
+                    const cleanUp = () => {
+                        this.activeUtterances.delete(utterance);
+                        if (callback) callback();
+                    };
+
+                    utterance.onend = cleanUp;
+                    utterance.onerror = cleanUp;
+
+                    this.synth.speak(utterance);
+                } catch (e) {
+                    console.warn("Speech Synthesis error:", e);
+                    if (callback) callback();
+                }
             }
         };
         speechManager.init();
@@ -1393,9 +1403,8 @@
             welcomeOverlay.classList.add('hidden');
             
             audioSynth.playSuccess();
-            speechManager.speak("Let's play!", () => {
-                setTimeout(loadNewRound, 300);
-            });
+            speechManager.speak("Let's play!");
+            setTimeout(loadNewRound, 300);
         });
     </script>
 </body>
