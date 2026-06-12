@@ -13,6 +13,7 @@
     
     <!-- Canvas Confetti Library for sensory-rich rewards -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="../learning-game-utils.css">
 
     <style>
         :root {
@@ -731,15 +732,20 @@
             <!-- Audio Toggles -->
             <div class="setting-section">
                 <span class="setting-label">Audio Settings</span>
-                <button class="setting-toggle-btn enabled" id="toggle-sound">
+                <button class="setting-toggle-btn enabled" id="toggle-sound" aria-pressed="true">
                     Sound Effects (Chimes)
                     <div class="setting-toggle-indicator"></div>
                 </button>
-                <button class="setting-toggle-btn enabled" id="toggle-speech">
+                <button class="setting-toggle-btn enabled" id="toggle-speech" aria-pressed="true">
                     Voice Prompts (Speech)
                     <div class="setting-toggle-indicator"></div>
                 </button>
+                <button class="setting-toggle-btn" id="toggle-motion" aria-pressed="false">
+                    Reduce Motion
+                    <div class="setting-toggle-indicator"></div>
+                </button>
             </div>
+            <div class="parent-summary" id="parent-summary"></div>
 
             <button class="modal-close-btn" id="modal-close-btn">Done 🌟</button>
         </div>
@@ -756,7 +762,7 @@
         
         <!-- Header: Displays total score stars, current level progression, and the parent lock trigger -->
         <header>
-            <div class="score-box" id="score-display">⭐ <span class="score-star" id="score-val">0</span></div>
+            <div class="score-box" id="score-display" aria-live="polite">⭐ <span class="score-star" id="score-val">0</span></div>
             
             <!-- Streak Tracker: 8 stars to Level Up -->
             <div class="streak-tracker">
@@ -771,18 +777,18 @@
             </div>
             
             <!-- Safe Settings button with hidden progress ring -->
-            <div class="settings-btn-trigger" id="settings-trigger">
+            <button class="settings-btn-trigger" id="settings-trigger" type="button" aria-label="Hold for parent settings">
                 <div class="settings-progress-ring"></div>
                 <svg viewBox="0 0 24 24">
                     <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.04,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
                 </svg>
-            </div>
+            </button>
         </header>
 
         <!-- Main Workspace -->
         <main>
             <div id="level-badge">Level 1</div>
-            <h1 id="prompt-text">Can you find 3?</h1>
+            <h1 id="prompt-text" aria-live="polite">Can you find 3?</h1>
             
             <!-- Ten-Frame Structured Object Tray -->
             <div id="tray-container">
@@ -796,10 +802,15 @@
                 <button class="choice-card card-left" id="choice-left">3</button>
                 <button class="choice-card card-right" id="choice-right">6</button>
             </div>
+            <div class="learning-controls">
+                <button class="learning-control-btn" id="repeat-prompt" type="button">Hear question</button>
+                <button class="learning-control-btn" id="exit-game" type="button">Choose another game</button>
+            </div>
         </main>
         
     </div>
 
+    <script src="../learning-game-utils.js"></script>
     <script>
         // --- Core Configuration and Theme Data ---
         const THEMES = {
@@ -867,6 +878,20 @@
             isWaitingInput: false,
             wrongAttemptsThisRound: 0
         };
+        const SAVED = LearningGame.load('number-bridge', {
+            currentLevel: 1,
+            currentTheme: 'mixed',
+            soundEnabled: true,
+            speechEnabled: true,
+            reduceMotion: LearningGame.prefersReducedMotion(),
+            score: 0,
+            skills: {}
+        });
+        Object.assign(STATE, SAVED);
+        STATE.recentErrors = [];
+        const mastery = LearningGame.createMasteryTracker({ skills: SAVED.skills });
+        let lastCorrectCount = null;
+        LearningGame.applyMotionPreference(SAVED.reduceMotion);
 
         // --- DOM Elements ---
         const welcomeOverlay = document.getElementById('welcome-overlay');
@@ -885,9 +910,35 @@
         
         const toggleSoundBtn = document.getElementById('toggle-sound');
         const toggleSpeechBtn = document.getElementById('toggle-speech');
+        const toggleMotionBtn = document.getElementById('toggle-motion');
+        const parentSummary = document.getElementById('parent-summary');
+        const repeatPromptBtn = document.getElementById('repeat-prompt');
+        const exitGameBtn = document.getElementById('exit-game');
         
         const levelupOverlay = document.getElementById('levelup-overlay');
         const levelupBadgeText = document.getElementById('levelup-badge-text');
+        scoreVal.textContent = STATE.score;
+
+        function persistState() {
+            LearningGame.save('number-bridge', {
+                currentLevel: STATE.currentLevel,
+                currentTheme: STATE.currentTheme,
+                soundEnabled: STATE.soundEnabled,
+                speechEnabled: STATE.speechEnabled,
+                reduceMotion: document.body.classList.contains('reduce-motion'),
+                score: STATE.score,
+                skills: mastery.skills
+            });
+        }
+
+        function updateParentSummary() {
+            const totals = Object.values(mastery.skills).reduce((sum, item) => ({
+                attempts: sum.attempts + item.attempts,
+                independent: sum.independent + item.independent
+            }), { attempts: 0, independent: 0 });
+            const accuracy = totals.attempts ? Math.round(totals.independent / totals.attempts * 100) : 0;
+            parentSummary.textContent = `Independent answers: ${totals.independent}/${totals.attempts} (${accuracy}%). Current level: ${STATE.currentLevel}.`;
+        }
 
         // --- Custom Audio Synthesizer Class (Web Audio API) ---
         class WebAudioSynth {
@@ -1087,13 +1138,17 @@
             // Clean up card states
             choiceLeftBtn.className = 'choice-card card-left';
             choiceRightBtn.className = 'choice-card card-right';
+            choiceLeftBtn.removeAttribute('aria-disabled');
+            choiceRightBtn.removeAttribute('aria-disabled');
             
             // 1. Determine number range depending on level
-            const isRangeUpToFive = (STATE.currentLevel <= 3);
-            const maxVal = isRangeUpToFive ? 5 : 10;
+            const maxVal = STATE.currentLevel === 1 ? 3 : STATE.currentLevel <= 3 ? 5 : 10;
             
             // Make sure we generate a random quantity
-            STATE.correctCount = Math.floor(Math.random() * maxVal) + 1;
+            do {
+                STATE.correctCount = Math.floor(Math.random() * maxVal) + 1;
+            } while (maxVal > 1 && STATE.correctCount === lastCorrectCount);
+            lastCorrectCount = STATE.correctCount;
             
             // 2. Generate distractor based on current level logic
             const distractor = generateOptions(STATE.correctCount, STATE.currentLevel);
@@ -1177,7 +1232,7 @@
             const rect = clickedBtn.getBoundingClientRect();
             const originX = (rect.left + rect.width / 2) / window.innerWidth;
             const originY = (rect.top + rect.height / 2) / window.innerHeight;
-            confetti({
+            LearningGame.celebrate({
                 particleCount: 80,
                 spread: 60,
                 origin: { x: originX, y: originY },
@@ -1188,6 +1243,11 @@
             STATE.score++;
             scoreVal.textContent = STATE.score;
             scoreVal.classList.add('pop');
+            const independent = STATE.wrongAttemptsThisRound === 0;
+            mastery.record(`count-${STATE.correctCount}`, independent);
+            if (independent) STATE.recentErrors.push(false);
+            STATE.recentErrors = STATE.recentErrors.slice(-5);
+            persistState();
             setTimeout(() => scoreVal.classList.remove('pop'), 300);
 
             // 4. Update adaptive progression streak IF they got it right on the first attempt
@@ -1220,6 +1280,11 @@
         function handleIncorrectTap(clickedBtn, otherBtn) {
             STATE.isWaitingInput = false;
             STATE.wrongAttemptsThisRound++;
+            if (STATE.wrongAttemptsThisRound === 1) {
+                STATE.recentErrors.push(true);
+                STATE.recentErrors = STATE.recentErrors.slice(-5);
+                persistState();
+            }
             
             // Reset streak on error to guarantee adaptive progression holds
             STATE.streak = 0;
@@ -1235,6 +1300,7 @@
             setTimeout(() => {
                 clickedBtn.classList.remove('shake-muted');
                 clickedBtn.classList.add('disabled');
+                clickedBtn.setAttribute('aria-disabled', 'true');
                 
                 // Highlight the remaining correct card with gentle breathing heartbeat scale
                 otherBtn.classList.add('hint-pulse');
@@ -1256,13 +1322,13 @@
             
             // Trigger beautiful multi-stage confetti sprays across full screen
             audioSynth.playLevelUp();
-            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+            LearningGame.celebrate({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
             
             setTimeout(() => {
-                confetti({ particleCount: 100, spread: 100, origin: { x: 0.2, y: 0.5 } });
+                LearningGame.celebrate({ particleCount: 100, spread: 100, origin: { x: 0.2, y: 0.5 } });
             }, 250);
             setTimeout(() => {
-                confetti({ particleCount: 100, spread: 100, origin: { x: 0.8, y: 0.5 } });
+                LearningGame.celebrate({ particleCount: 100, spread: 100, origin: { x: 0.8, y: 0.5 } });
             }, 500);
 
             // Open celebratory full-screen card
@@ -1292,11 +1358,13 @@
             } else {
                 handleIncorrectTap(clickedBtn, otherBtn);
                 
-                // If they miss twice in a row across rounds, automatically downgrade difficulty
-                if (STATE.wrongAttemptsThisRound >= 2 && STATE.currentLevel > 1) {
+                // Step down when recent independent trials show repeated difficulty.
+                if (STATE.recentErrors.filter(Boolean).length >= 3 && STATE.currentLevel > 1) {
                     STATE.currentLevel--;
                     STATE.streak = 0;
+                    STATE.recentErrors = [];
                     updateStreakStars();
+                    persistState();
                 }
             }
         }
@@ -1340,6 +1408,12 @@
 
         // Unified Pointer Events for desktop mouse and tablet touch screens
         settingsTrigger.addEventListener('pointerdown', startHold);
+        settingsTrigger.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openParentDashboard();
+            }
+        });
         window.addEventListener('pointerup', cancelHold);
         window.addEventListener('pointercancel', cancelHold);
 
@@ -1354,7 +1428,12 @@
             });
             
             toggleSoundBtn.classList.toggle('enabled', STATE.soundEnabled);
+            toggleSoundBtn.setAttribute('aria-pressed', String(STATE.soundEnabled));
             toggleSpeechBtn.classList.toggle('enabled', STATE.speechEnabled);
+            toggleSpeechBtn.setAttribute('aria-pressed', String(STATE.speechEnabled));
+            toggleMotionBtn.classList.toggle('enabled', document.body.classList.contains('reduce-motion'));
+            toggleMotionBtn.setAttribute('aria-pressed', String(document.body.classList.contains('reduce-motion')));
+            updateParentSummary();
             
             audioSynth.init(); // Warm AudioContext
             settingsModal.classList.add('active');
@@ -1367,6 +1446,7 @@
                 STATE.streak = 0;
                 document.querySelectorAll('[data-level]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+                persistState();
             });
         });
 
@@ -1375,18 +1455,37 @@
                 STATE.currentTheme = btn.dataset.theme;
                 document.querySelectorAll('[data-theme]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+                persistState();
             });
         });
 
         toggleSoundBtn.addEventListener('click', () => {
             STATE.soundEnabled = !STATE.soundEnabled;
             toggleSoundBtn.classList.toggle('enabled', STATE.soundEnabled);
+            toggleSoundBtn.setAttribute('aria-pressed', String(STATE.soundEnabled));
             if (STATE.soundEnabled) audioSynth.playTone(600, 'sine', 0.1);
+            persistState();
         });
 
         toggleSpeechBtn.addEventListener('click', () => {
             STATE.speechEnabled = !STATE.speechEnabled;
             toggleSpeechBtn.classList.toggle('enabled', STATE.speechEnabled);
+            toggleSpeechBtn.setAttribute('aria-pressed', String(STATE.speechEnabled));
+            persistState();
+        });
+
+        toggleMotionBtn.addEventListener('click', () => {
+            const reduce = !document.body.classList.contains('reduce-motion');
+            LearningGame.applyMotionPreference(reduce);
+            toggleMotionBtn.classList.toggle('enabled', reduce);
+            toggleMotionBtn.setAttribute('aria-pressed', String(reduce));
+            persistState();
+        });
+
+        repeatPromptBtn.addEventListener('click', () => speechManager.speak(promptText.textContent));
+        exitGameBtn.addEventListener('click', () => {
+            speechManager.synth?.cancel();
+            window.location.href = '/';
         });
 
         modalCloseBtn.addEventListener('click', () => {
@@ -1406,6 +1505,7 @@
             speechManager.speak("Let's play!");
             setTimeout(loadNewRound, 300);
         });
+        LearningGame.setupModal(settingsModal, settingsTrigger, modalCloseBtn);
     </script>
 </body>
 </html>

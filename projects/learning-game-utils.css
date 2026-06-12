@@ -1,0 +1,53 @@
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+:where(button, [role="button"], [tabindex="0"]):focus-visible {
+    outline: 5px solid #124e78;
+    outline-offset: 4px;
+}
+
+.learning-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.learning-control-btn {
+    border: 2px solid rgba(20, 60, 80, 0.18);
+    border-radius: 999px;
+    background: white;
+    color: #263238;
+    padding: 10px 16px;
+    min-height: 48px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.parent-summary {
+    margin: 12px 0;
+    padding: 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #263238;
+    line-height: 1.45;
+}
+
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+}

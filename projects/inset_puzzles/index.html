@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="../learning-game-utils.css">
     <style>
         :root {
             --bg-color: hsl(270, 60%, 97%);       /* Soft pastel lavender */
@@ -661,15 +662,20 @@
             <!-- Audio Settings -->
             <div class="setting-section">
                 <span class="setting-label">Audio Settings</span>
-                <button class="setting-toggle-btn enabled" id="toggle-sound">
+                <button class="setting-toggle-btn enabled" id="toggle-sound" aria-pressed="true">
                     Sound Effects (Chimes)
                     <div class="setting-toggle-indicator"></div>
                 </button>
-                <button class="setting-toggle-btn enabled" id="toggle-speech">
+                <button class="setting-toggle-btn enabled" id="toggle-speech" aria-pressed="true">
                     Voice Prompts (Speech)
                     <div class="setting-toggle-indicator"></div>
                 </button>
+                <button class="setting-toggle-btn" id="toggle-motion" aria-pressed="false">
+                    Reduce Motion
+                    <div class="setting-toggle-indicator"></div>
+                </button>
             </div>
+            <div class="parent-summary" id="parent-summary"></div>
 
             <button class="modal-close-btn" id="modal-close-btn">Done 🌟</button>
         </div>
@@ -685,7 +691,7 @@
     <div id="app-container">
         
         <header>
-            <div class="score-box" id="score-display">⭐ <span class="score-star" id="score-val">0</span></div>
+            <div class="score-box" id="score-display" aria-live="polite">⭐ <span class="score-star" id="score-val">0</span></div>
             
             <div class="streak-tracker">
                 <span class="streak-star" id="streak-1">★</span>
@@ -698,18 +704,18 @@
                 <span class="streak-star" id="streak-8">★</span>
             </div>
             
-            <div class="settings-btn-trigger" id="settings-trigger">
+            <button class="settings-btn-trigger" id="settings-trigger" type="button" aria-label="Hold for parent settings">
                 <div class="settings-progress-ring"></div>
                 <svg viewBox="0 0 24 24">
                     <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.04,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
                 </svg>
-            </div>
+            </button>
         </header>
 
         <!-- Main Workspace -->
         <main>
             <div id="level-badge">Level 1</div>
-            <h1 id="prompt-text">Drag the shapes to their spots!</h1>
+            <h1 id="prompt-text" aria-live="polite">Drag or tap a shape, then choose its spot.</h1>
             
             <div id="puzzle-container">
                 <!-- Left Outline Canvas -->
@@ -722,10 +728,15 @@
                     <!-- Interactive puzzle pieces will live here -->
                 </div>
             </div>
+            <div class="learning-controls">
+                <button class="learning-control-btn" id="repeat-prompt" type="button">Hear direction</button>
+                <button class="learning-control-btn" id="exit-game" type="button">Choose another game</button>
+            </div>
         </main>
         
     </div>
 
+    <script src="../learning-game-utils.js"></script>
     <script>
         // --- Game Setup Data for Shapes & Scenes ---
         const PUZZLE_DATA = {
@@ -773,8 +784,22 @@
             currentScene: 'fire_station',
             soundEnabled: true,
             speechEnabled: true,
-            activeDrag: null
+            activeDrag: null,
+            selectedPiece: null,
+            hadError: false
         };
+        const SAVED = LearningGame.load('inset-puzzles', {
+            currentLevel: 1,
+            currentScene: 'fire_station',
+            soundEnabled: true,
+            speechEnabled: true,
+            reduceMotion: LearningGame.prefersReducedMotion(),
+            score: 0,
+            skills: {}
+        });
+        Object.assign(STATE, SAVED);
+        const mastery = LearningGame.createMasteryTracker({ skills: SAVED.skills });
+        LearningGame.applyMotionPreference(SAVED.reduceMotion);
 
         // --- DOM Elements ---
         const welcomeOverlay = document.getElementById('welcome-overlay');
@@ -792,9 +817,35 @@
 
         const toggleSoundBtn = document.getElementById('toggle-sound');
         const toggleSpeechBtn = document.getElementById('toggle-speech');
+        const toggleMotionBtn = document.getElementById('toggle-motion');
+        const parentSummary = document.getElementById('parent-summary');
+        const repeatPromptBtn = document.getElementById('repeat-prompt');
+        const exitGameBtn = document.getElementById('exit-game');
         
         const levelupOverlay = document.getElementById('levelup-overlay');
         const levelupBadgeText = document.getElementById('levelup-badge-text');
+        scoreVal.textContent = STATE.score;
+
+        function persistState() {
+            LearningGame.save('inset-puzzles', {
+                currentLevel: STATE.currentLevel,
+                currentScene: STATE.currentScene,
+                soundEnabled: STATE.soundEnabled,
+                speechEnabled: STATE.speechEnabled,
+                reduceMotion: document.body.classList.contains('reduce-motion'),
+                score: STATE.score,
+                skills: mastery.skills
+            });
+        }
+
+        function updateParentSummary() {
+            const totals = Object.values(mastery.skills).reduce((sum, item) => ({
+                attempts: sum.attempts + item.attempts,
+                independent: sum.independent + item.independent
+            }), { attempts: 0, independent: 0 });
+            const accuracy = totals.attempts ? Math.round(totals.independent / totals.attempts * 100) : 0;
+            parentSummary.textContent = `Independent puzzles: ${totals.independent}/${totals.attempts} (${accuracy}%). Current level: ${STATE.currentLevel}.`;
+        }
 
         // --- Custom Audio Synthesizer ---
         class WebAudioSynth {
@@ -940,6 +991,8 @@
         function loadNewRound() {
             puzzleCanvas.innerHTML = '';
             puzzleShelf.innerHTML = '';
+            STATE.selectedPiece = null;
+            STATE.hadError = false;
             
             levelBadge.textContent = `Level ${STATE.currentLevel}`;
             updateStreakStars();
@@ -985,6 +1038,10 @@
                 const slot = document.createElement('div');
                 slot.className = 'puzzle-slot';
                 slot.id = `slot_${p.id}`;
+                slot.dataset.pieceId = p.id;
+                slot.setAttribute('role', 'button');
+                slot.setAttribute('tabindex', '0');
+                slot.setAttribute('aria-label', `${p.name} target`);
                 
                 // Position slots
                 const coords = coordinateSlots[idx];
@@ -999,6 +1056,27 @@
                     </svg>
                 `;
                 puzzleCanvas.appendChild(slot);
+                const placeSelected = () => {
+                    if (!STATE.selectedPiece) {
+                        speechManager.speak(`Choose the ${p.name} piece first.`);
+                        return;
+                    }
+                    if (STATE.selectedPiece.dataset.pieceId === p.id) {
+                        snapPieceToSlot(STATE.selectedPiece, slot, slot.getBoundingClientRect());
+                        STATE.selectedPiece = null;
+                    } else {
+                        STATE.hadError = true;
+                        audioSynth.playIncorrect();
+                        speechManager.speak('Try a different spot.');
+                    }
+                };
+                slot.addEventListener('click', placeSelected);
+                slot.addEventListener('keydown', event => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        placeSelected();
+                    }
+                });
             });
 
             // 5. Inject Draggable pieces randomly on the shelf
@@ -1013,6 +1091,10 @@
                 piece.className = 'puzzle-piece';
                 piece.id = `piece_${p.id}`;
                 piece.dataset.pieceId = p.id;
+                piece.dataset.pieceName = p.name;
+                piece.setAttribute('role', 'button');
+                piece.setAttribute('tabindex', '0');
+                piece.setAttribute('aria-label', `${p.name} puzzle piece`);
                 
                 // Position piece inside shelf space
                 // Align them in a nice column stack
@@ -1034,10 +1116,24 @@
                 
                 puzzleShelf.appendChild(piece);
                 bindPointerDragging(piece);
+                const selectPiece = () => {
+                    if (piece.classList.contains('snapped')) return;
+                    document.querySelectorAll('.puzzle-piece').forEach(item => item.removeAttribute('aria-pressed'));
+                    STATE.selectedPiece = piece;
+                    piece.setAttribute('aria-pressed', 'true');
+                    speechManager.speak(`${p.name}. Choose its matching spot.`);
+                };
+                piece.addEventListener('click', selectPiece);
+                piece.addEventListener('keydown', event => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        selectPiece();
+                    }
+                });
             });
 
             // 6. Voice prompt intro
-            const promptStr = activeTheme.prompt;
+            const promptStr = `${activeTheme.prompt} Drag a piece, or tap it and then tap its spot.`;
             promptText.textContent = promptStr;
             speechManager.speak(promptStr);
         }
@@ -1143,6 +1239,8 @@
         // Smoothly glide piece into correct slot coordinate mapping
         function snapPieceToSlot(pieceEl, slotEl, slotRect) {
             pieceEl.classList.add('snapped');
+            pieceEl.setAttribute('aria-disabled', 'true');
+            pieceEl.setAttribute('tabindex', '-1');
             
             // Stop drag offset tracking and align directly inside puzzle canvas
             // Get coordinates of slot relative to shelf container
@@ -1170,8 +1268,7 @@
             audioSynth.playSnap();
             
             // Voicing correct shape
-            const shapeName = pieceEl.dataset.pieceId.split('_')[1];
-            const friendlyName = shapeName.charAt(0).toUpperCase() + shapeName.slice(1);
+            const friendlyName = pieceEl.dataset.pieceName;
             speechManager.speak(`${friendlyName}!`);
 
             // Verify if game complete
@@ -1180,6 +1277,7 @@
 
         // Return piece back to shelf with pleasant sound and slide
         function returnHome(pieceEl) {
+            STATE.hadError = true;
             audioSynth.playIncorrect();
             pieceEl.classList.add('returning-home');
             pieceEl.style.transform = 'translate3d(0, 0, 0)';
@@ -1203,7 +1301,7 @@
         // Rich sensory congratulations chimes and visual pops
         function triggerPuzzleCelebration() {
             // 1. Confetti pop
-            confetti({
+            LearningGame.celebrate({
                 particleCount: 120,
                 spread: 70,
                 origin: { y: 0.6 },
@@ -1219,8 +1317,10 @@
             scoreVal.classList.add('pop');
             setTimeout(() => scoreVal.classList.remove('pop'), 300);
 
-            STATE.streak++;
+            mastery.record(`scene-${STATE.currentScene}:level-${STATE.currentLevel}`, !STATE.hadError);
+            if (!STATE.hadError) STATE.streak++;
             updateStreakStars();
+            persistState();
 
             // 4. Voice congratulations chimes
             speechManager.speak("Awesome! You completed the puzzle!");
@@ -1245,13 +1345,13 @@
             }
 
             audioSynth.playLevelUp();
-            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+            LearningGame.celebrate({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
             
             setTimeout(() => {
-                confetti({ particleCount: 80, spread: 90, origin: { x: 0.2, y: 0.5 } });
+                LearningGame.celebrate({ particleCount: 80, spread: 90, origin: { x: 0.2, y: 0.5 } });
             }, 250);
             setTimeout(() => {
-                confetti({ particleCount: 80, spread: 90, origin: { x: 0.8, y: 0.5 } });
+                LearningGame.celebrate({ particleCount: 80, spread: 90, origin: { x: 0.8, y: 0.5 } });
             }, 500);
 
             levelupBadgeText.textContent = `Level ${STATE.currentLevel}!`;
@@ -1292,6 +1392,12 @@
 
         settingsTrigger.addEventListener('dragstart', e => e.preventDefault());
         settingsTrigger.addEventListener('pointerdown', startHold);
+        settingsTrigger.addEventListener('keydown', event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openParentDashboard();
+            }
+        });
         window.addEventListener('pointerup', cancelHold);
         window.addEventListener('pointercancel', cancelHold);
 
@@ -1305,7 +1411,12 @@
             });
             
             toggleSoundBtn.classList.toggle('enabled', STATE.soundEnabled);
+            toggleSoundBtn.setAttribute('aria-pressed', String(STATE.soundEnabled));
             toggleSpeechBtn.classList.toggle('enabled', STATE.speechEnabled);
+            toggleSpeechBtn.setAttribute('aria-pressed', String(STATE.speechEnabled));
+            toggleMotionBtn.classList.toggle('enabled', document.body.classList.contains('reduce-motion'));
+            toggleMotionBtn.setAttribute('aria-pressed', String(document.body.classList.contains('reduce-motion')));
+            updateParentSummary();
             
             audioSynth.init();
             settingsModal.classList.add('active');
@@ -1317,6 +1428,7 @@
                 STATE.streak = 0;
                 document.querySelectorAll('[data-level]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+                persistState();
             });
         });
 
@@ -1325,18 +1437,36 @@
                 STATE.currentScene = btn.dataset.scene;
                 document.querySelectorAll('[data-scene]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+                persistState();
             });
         });
 
         toggleSoundBtn.addEventListener('click', () => {
             STATE.soundEnabled = !STATE.soundEnabled;
             toggleSoundBtn.classList.toggle('enabled', STATE.soundEnabled);
+            toggleSoundBtn.setAttribute('aria-pressed', String(STATE.soundEnabled));
             if (STATE.soundEnabled) audioSynth.playTone(600, 'sine', 0.1);
+            persistState();
         });
 
         toggleSpeechBtn.addEventListener('click', () => {
             STATE.speechEnabled = !STATE.speechEnabled;
             toggleSpeechBtn.classList.toggle('enabled', STATE.speechEnabled);
+            toggleSpeechBtn.setAttribute('aria-pressed', String(STATE.speechEnabled));
+            persistState();
+        });
+
+        toggleMotionBtn.addEventListener('click', () => {
+            const reduce = !document.body.classList.contains('reduce-motion');
+            LearningGame.applyMotionPreference(reduce);
+            toggleMotionBtn.classList.toggle('enabled', reduce);
+            toggleMotionBtn.setAttribute('aria-pressed', String(reduce));
+            persistState();
+        });
+        repeatPromptBtn.addEventListener('click', () => speechManager.speak(promptText.textContent));
+        exitGameBtn.addEventListener('click', () => {
+            speechManager.synth?.cancel();
+            window.location.href = '/';
         });
 
         modalCloseBtn.addEventListener('click', () => {
@@ -1353,6 +1483,16 @@
             speechManager.speak("Let's play!");
             setTimeout(loadNewRound, 300);
         });
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (welcomeOverlay.classList.contains('hidden') && !settingsModal.classList.contains('active')) {
+                    loadNewRound();
+                }
+            }, 180);
+        });
+        LearningGame.setupModal(settingsModal, settingsTrigger, modalCloseBtn);
     </script>
 </body>
 </html>

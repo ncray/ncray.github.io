@@ -51,6 +51,14 @@ let round = 0;
 let attempts = 0;
 let acceptingInput = false;
 let audioContext = null;
+let lastLetter = null;
+let letterBag = [];
+let lastCount = null;
+let countBag = [];
+const timers = LearningGame.createTimerManager();
+const mastery = LearningGame.createMasteryTracker(
+    LearningGame.load("caleb-learning-mastery", {})
+);
 
 const screens = [...document.querySelectorAll(".screen")];
 const menuScreen = document.getElementById("menu-screen");
@@ -66,6 +74,7 @@ const choices = document.getElementById("choices");
 const feedback = document.getElementById("feedback");
 const repeatBtn = document.getElementById("repeat-btn");
 const progressDots = [...document.querySelectorAll(".progress-dot")];
+const parentSummary = document.getElementById("parent-summary");
 
 function loadSettings() {
     try {
@@ -95,6 +104,21 @@ function shuffle(items) {
 
 function sample(items) {
     return items[Math.floor(Math.random() * items.length)];
+}
+
+function nextBalanced(items, bagName) {
+    let bag = bagName === "letters" ? letterBag : countBag;
+    const previous = bagName === "letters" ? lastLetter : lastCount;
+    if (bag.length === 0) bag = LearningGame.shuffledBag(items, previous);
+    const value = bag.shift();
+    if (bagName === "letters") {
+        letterBag = bag;
+        lastLetter = value;
+    } else {
+        countBag = bag;
+        lastCount = value;
+    }
+    return value;
 }
 
 function makeOptions(answer, pool) {
@@ -138,6 +162,8 @@ function updateProgress() {
 }
 
 function startGame(game) {
+    timers.clearAll();
+    window.speechSynthesis?.cancel();
     currentGame = game;
     round = 0;
     updateProgress();
@@ -159,11 +185,11 @@ function nextRound() {
     if (currentGame === "counting") buildCounting();
     if (currentGame === "number-order") buildNumberOrder();
 
-    window.setTimeout(() => speak(currentPrompt), 180);
+    timers.set(() => speak(currentPrompt), 180);
 }
 
 function buildLetterMatch() {
-    const letter = sample(LETTERS);
+    const letter = nextBalanced(LETTERS, "letters");
     currentAnswer = letter.lower;
     currentPrompt = `Find little ${letter.upper}.`;
     prompt.textContent = `Find little ${letter.upper}`;
@@ -172,7 +198,7 @@ function buildLetterMatch() {
 }
 
 function buildFirstSound() {
-    const letter = sample(LETTERS);
+    const letter = nextBalanced(LETTERS, "letters");
     currentAnswer = letter.upper;
     currentPrompt = `${letter.word}. What letter does ${letter.word} start with?`;
     prompt.textContent = `What starts ${letter.word}?`;
@@ -185,7 +211,8 @@ function buildFirstSound() {
 }
 
 function buildCounting() {
-    const count = Math.floor(Math.random() * settings.numberRange) + 1;
+    const numberPool = Array.from({ length: settings.numberRange }, (_, index) => index + 1);
+    const count = nextBalanced(numberPool, "counts");
     const symbol = sample(COUNT_SYMBOLS);
     currentAnswer = String(count);
     currentPrompt = `How many? Count them.`;
@@ -194,8 +221,7 @@ function buildCounting() {
         <div class="count-grid" aria-label="${count} shapes">
             ${Array.from({ length: count }, () => `<span class="count-item">${symbol}</span>`).join("")}
         </div>`;
-    const numberPool = Array.from({ length: settings.numberRange }, (_, index) => String(index + 1));
-    renderChoices(makeOptions(String(count), numberPool));
+    renderChoices(makeOptions(String(count), numberPool.map(String)));
 }
 
 function buildNumberOrder() {
@@ -241,8 +267,10 @@ function checkAnswer(button) {
         playChime();
         speak(`${feedback.textContent} ${spokenAnswer()}`);
         round += 1;
+        mastery.record(`${currentGame}:${currentAnswer}`, attempts === 0);
+        LearningGame.save("caleb-learning-mastery", { skills: mastery.skills });
         updateProgress();
-        window.setTimeout(() => {
+        timers.set(() => {
             if (round >= 5) finishGame();
             else nextRound();
         }, settings.calmMotion ? 700 : 1100);
@@ -276,6 +304,7 @@ function finishGame() {
 }
 
 function goHome() {
+    timers.clearAll();
     window.speechSynthesis?.cancel();
     currentGame = null;
     showScreen(menuScreen);
@@ -290,6 +319,15 @@ function applySettingsToPage() {
     document.getElementById("range-setting").value = String(settings.numberRange);
 }
 
+function updateParentSummary() {
+    const totals = Object.values(mastery.skills).reduce((sum, item) => ({
+        attempts: sum.attempts + item.attempts,
+        independent: sum.independent + item.independent
+    }), { attempts: 0, independent: 0 });
+    const accuracy = totals.attempts ? Math.round(totals.independent / totals.attempts * 100) : 0;
+    parentSummary.textContent = `Independent answers: ${totals.independent}/${totals.attempts} (${accuracy}%).`;
+}
+
 document.querySelectorAll("[data-game]").forEach((button) => {
     button.addEventListener("click", () => startGame(button.dataset.game));
 });
@@ -301,6 +339,7 @@ document.getElementById("play-again-btn").addEventListener("click", () => startG
 
 settingsBtn.addEventListener("click", () => {
     applySettingsToPage();
+    updateParentSummary();
     settingsDialog.showModal();
 });
 
@@ -315,7 +354,10 @@ settingsDialog.addEventListener("close", () => {
     };
     saveSettings();
     applySettingsToPage();
-    if (currentGame && gameScreen.classList.contains("active")) nextRound();
+    if (currentGame && gameScreen.classList.contains("active")) {
+        timers.clearAll();
+        nextRound();
+    }
 });
 
 applySettingsToPage();

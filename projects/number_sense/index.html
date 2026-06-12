@@ -10,12 +10,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Confetti Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="../learning-game-utils.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
         <header>
-            <div id="score-board">⭐ <span id="score">0</span></div>
+            <div id="score-board" aria-live="polite">⭐ <span id="score">0</span></div>
             <button id="start-btn">Start Game 🎵</button>
         </header>
         
@@ -23,18 +24,35 @@
             <h1 id="question-text">Which side has more?</h1>
             
             <div id="comparison-area">
-                <div class="side-container" id="left-side">
+                <button class="side-container" id="left-side" type="button" aria-label="Choose the left side">
                     <div class="emoji-grid" id="left-emojis"></div>
-                </div>
+                </button>
                 
-                <div class="side-container" id="right-side">
+                <button class="side-container" id="right-side" type="button" aria-label="Choose the right side">
                     <div class="emoji-grid" id="right-emojis"></div>
-                </div>
+                </button>
             </div>
+            <div class="learning-controls">
+                <button id="repeat-btn" class="learning-control-btn" type="button">Hear question</button>
+                <button id="motion-btn" class="learning-control-btn" type="button" aria-pressed="false">Reduce motion</button>
+            </div>
+            <details id="parent-settings">
+                <summary>Grown-up settings and progress</summary>
+                <label><input id="voice-setting" type="checkbox" checked> Voice prompts</label>
+                <label>
+                    Number range
+                    <select id="range-setting">
+                        <option value="5">1–5</option>
+                        <option value="10" selected>1–10</option>
+                    </select>
+                </label>
+                <p class="parent-summary" id="parent-summary"></p>
+            </details>
         </main>
         
         <!-- Hidden audio for future sound effects if needed -->
     </div>
+    <script src="../learning-game-utils.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

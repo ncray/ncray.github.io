@@ -116,6 +116,19 @@ header {
     transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
     position: relative;
     overflow: hidden;
+    padding: 0;
+    font: inherit;
+}
+
+#parent-settings {
+    margin-top: 18px;
+    text-align: left;
+}
+
+#parent-settings label {
+    display: block;
+    margin: 12px 0;
+    font-size: 1rem;
 }
 
 .side-container:hover {

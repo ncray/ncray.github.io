@@ -1,5 +1,4 @@
 const EMOJIS = ['🐶', '🍎', '🐱', '🐘', '🍊', '🚗', '🎈', '⭐', '🍓', '🐸', '🦁', '🦖'];
-const MAX_NUMBER = 10;
 const MIN_NUMBER = 1;
 
 let score = 0;
@@ -7,6 +6,17 @@ let isPlaying = false;
 let isWaitingForInput = false;
 let currentLeftCount = 0;
 let currentRightCount = 0;
+let currentHadError = false;
+let lastPair = '';
+let settings = LearningGame.load('number-sense', {
+    reduceMotion: LearningGame.prefersReducedMotion(),
+    voice: true,
+    maxNumber: 10,
+    score: 0,
+    skills: {}
+});
+score = settings.score;
+const mastery = LearningGame.createMasteryTracker({ skills: settings.skills });
 
 // DOM Elements
 const gameContainer = document.getElementById('game-container');
@@ -16,6 +26,18 @@ const rightSide = document.getElementById('right-side');
 const leftEmojisDiv = document.getElementById('left-emojis');
 const rightEmojisDiv = document.getElementById('right-emojis');
 const scoreDisplay = document.getElementById('score');
+const repeatBtn = document.getElementById('repeat-btn');
+const motionBtn = document.getElementById('motion-btn');
+const voiceSetting = document.getElementById('voice-setting');
+const rangeSetting = document.getElementById('range-setting');
+const parentSettings = document.getElementById('parent-settings');
+const parentSummary = document.getElementById('parent-summary');
+scoreDisplay.textContent = score;
+LearningGame.applyMotionPreference(settings.reduceMotion);
+motionBtn.setAttribute('aria-pressed', String(settings.reduceMotion));
+motionBtn.textContent = settings.reduceMotion ? 'Allow motion' : 'Reduce motion';
+voiceSetting.checked = settings.voice;
+rangeSetting.value = String(settings.maxNumber);
 
 // Speech Synthesis Setup
 const synth = window.speechSynthesis;
@@ -23,13 +45,22 @@ let voices = [];
 const activeUtterances = new Set(); // Prevent garbage collection of speech utterances
 
 function loadVoices() {
+    if (!synth) return;
     voices = synth.getVoices();
 }
-if (speechSynthesis.onvoiceschanged !== undefined) {
-    speechSynthesis.onvoiceschanged = loadVoices;
+if (synth && 'onvoiceschanged' in synth) {
+    synth.onvoiceschanged = loadVoices;
 }
 
 function speak(text, callback = null) {
+    if (!settings.voice) {
+        if (callback) callback();
+        return;
+    }
+    if (!synth || typeof SpeechSynthesisUtterance === 'undefined') {
+        if (callback) callback();
+        return;
+    }
     if (synth.speaking) {
         synth.cancel();
     }
@@ -76,11 +107,15 @@ function renderEmojis(container, count, emoji) {
 }
 
 function generateRound() {
+    currentHadError = false;
     // Generate distinct counts for left and right
-    currentLeftCount = getRandomInt(MIN_NUMBER, MAX_NUMBER);
+    currentLeftCount = getRandomInt(MIN_NUMBER, settings.maxNumber);
     do {
-        currentRightCount = getRandomInt(MIN_NUMBER, MAX_NUMBER);
+        currentRightCount = getRandomInt(MIN_NUMBER, settings.maxNumber);
     } while (currentRightCount === currentLeftCount); // Ensure they are not equal
+    const pair = `${currentLeftCount}:${currentRightCount}`;
+    if (pair === lastPair) return generateRound();
+    lastPair = pair;
 
     // Pick a random emoji
     let emoji = getRandomEmoji();
@@ -117,6 +152,9 @@ function handleSideClick(side) {
         isWaitingForInput = false; // block inputs during feedback animation
         score++;
         scoreDisplay.textContent = score;
+        mastery.record(`compare:${Math.max(currentLeftCount, currentRightCount)}`, !currentHadError);
+        settings = { ...settings, score, skills: mastery.skills };
+        LearningGame.save('number-sense', settings);
 
         // Visual Feedback
         clickedContainer.classList.add('success-bounce');
@@ -131,13 +169,13 @@ function handleSideClick(side) {
             generateRound();
         }, 600);
     } else {
+        currentHadError = true;
         isWaitingForInput = false;
         // Visual Feedback
         clickedContainer.classList.add('shake');
 
         // Speak warning in background
         speak("Try again!");
-
         // Allow click input again immediately after shake animation completes (500ms)
         setTimeout(() => {
             clickedContainer.classList.remove('shake');
@@ -152,7 +190,7 @@ function triggerConfetti(element) {
     const originX = (rect.left + rect.width / 2) / window.innerWidth;
     const originY = (rect.top + rect.height / 2) / window.innerHeight;
 
-    confetti({
+    LearningGame.celebrate({
         particleCount: 100,
         spread: 70,
         origin: { x: originX, y: originY },
@@ -162,6 +200,9 @@ function triggerConfetti(element) {
 
 // Event Listeners
 startBtn.addEventListener('click', () => {
+    if (isPlaying) return;
+    isPlaying = true;
+    startBtn.disabled = true;
     // Need user interaction to initialize speech synthesis reliably in some browsers
     loadVoices();
     speak("Let's play!");
@@ -170,3 +211,29 @@ startBtn.addEventListener('click', () => {
 
 leftSide.addEventListener('click', () => handleSideClick('left'));
 rightSide.addEventListener('click', () => handleSideClick('right'));
+repeatBtn.addEventListener('click', () => speak("Which side has more?"));
+motionBtn.addEventListener('click', () => {
+    settings.reduceMotion = !settings.reduceMotion;
+    LearningGame.applyMotionPreference(settings.reduceMotion);
+    motionBtn.setAttribute('aria-pressed', String(settings.reduceMotion));
+    motionBtn.textContent = settings.reduceMotion ? 'Allow motion' : 'Reduce motion';
+    LearningGame.save('number-sense', settings);
+});
+voiceSetting.addEventListener('change', () => {
+    settings.voice = voiceSetting.checked;
+    LearningGame.save('number-sense', settings);
+});
+rangeSetting.addEventListener('change', () => {
+    settings.maxNumber = Number(rangeSetting.value);
+    LearningGame.save('number-sense', settings);
+    if (isPlaying) generateRound();
+});
+parentSettings.addEventListener('toggle', () => {
+    if (!parentSettings.open) return;
+    const totals = Object.values(mastery.skills).reduce((sum, item) => ({
+        attempts: sum.attempts + item.attempts,
+        independent: sum.independent + item.independent
+    }), { attempts: 0, independent: 0 });
+    const accuracy = totals.attempts ? Math.round(totals.independent / totals.attempts * 100) : 0;
+    parentSummary.textContent = `Independent comparisons: ${totals.independent}/${totals.attempts} (${accuracy}%).`;
+});
