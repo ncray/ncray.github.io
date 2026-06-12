@@ -15,6 +15,17 @@ layout: home
   <h2 class="section-title">🛠️ Crafted Projects</h2>
   
   <div class="projects-grid">
+    <!-- Caleb's Learning Garden -->
+    <a href="/projects/caleb_learning/" class="project-card">
+      <div class="card-accent" style="background: linear-gradient(135deg, #27936f, #f4c64e);"></div>
+      <div class="project-info">
+        <span class="project-tag">Early Learning</span>
+        <h3 class="project-name">🌱 Caleb's Learning Garden</h3>
+        <p class="project-desc">Four gentle, sensory-considerate alphabet and number games with large touch targets, voice prompts, adjustable difficulty, and calm feedback.</p>
+        <span class="project-btn">Start Playing →</span>
+      </div>
+    </a>
+
     <!-- Japan Trip Planner -->
     <a href="/projects/japan-trip/" class="project-card">
       <div class="card-accent" style="background: linear-gradient(135deg, #ff416c, #ff4b2b);"></div>
@@ -115,4 +126,3 @@ layout: home
     </a>
   </div>
 </section>
-

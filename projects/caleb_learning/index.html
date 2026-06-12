@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#eef8f4">
+    <title>Caleb's Learning Garden</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <header class="topbar">
+            <button id="home-btn" class="icon-btn hidden" type="button" aria-label="Choose another game">⌂</button>
+            <div class="brand">
+                <span aria-hidden="true">🌱</span>
+                <span>Caleb's Learning Garden</span>
+            </div>
+            <button id="settings-btn" class="icon-btn" type="button" aria-label="Open grown-up settings">⚙</button>
+        </header>
+
+        <main>
+            <section id="menu-screen" class="screen active" aria-labelledby="welcome-title">
+                <div class="welcome">
+                    <p class="eyebrow">Pick a game</p>
+                    <h1 id="welcome-title">Hi, Caleb!</h1>
+                    <p>Letters and numbers are ready to play.</p>
+                </div>
+
+                <div class="game-grid">
+                    <button class="game-card letters" type="button" data-game="letter-match">
+                        <span class="card-art" aria-hidden="true">Aa</span>
+                        <span class="card-title">Match Letters</span>
+                        <span class="card-subtitle">Big and little letters</span>
+                    </button>
+                    <button class="game-card sounds" type="button" data-game="first-sound">
+                        <span class="card-art" aria-hidden="true">🍎 A</span>
+                        <span class="card-title">First Letter</span>
+                        <span class="card-subtitle">What letter starts it?</span>
+                    </button>
+                    <button class="game-card counting" type="button" data-game="counting">
+                        <span class="card-art" aria-hidden="true">● ● ●</span>
+                        <span class="card-title">Count It</span>
+                        <span class="card-subtitle">Count and choose</span>
+                    </button>
+                    <button class="game-card order" type="button" data-game="number-order">
+                        <span class="card-art" aria-hidden="true">1 2 3</span>
+                        <span class="card-title">Number Train</span>
+                        <span class="card-subtitle">Find the missing number</span>
+                    </button>
+                </div>
+            </section>
+
+            <section id="game-screen" class="screen" aria-live="polite">
+                <div class="progress-row" aria-label="Round progress">
+                    <span class="progress-dot"></span>
+                    <span class="progress-dot"></span>
+                    <span class="progress-dot"></span>
+                    <span class="progress-dot"></span>
+                    <span class="progress-dot"></span>
+                </div>
+                <p id="game-label" class="eyebrow"></p>
+                <h1 id="prompt">Find the match</h1>
+                <button id="repeat-btn" class="listen-btn" type="button">
+                    <span aria-hidden="true">🔊</span> Hear it again
+                </button>
+                <div id="question-area" class="question-area"></div>
+                <div id="choices" class="choices"></div>
+                <p id="feedback" class="feedback" role="status"></p>
+            </section>
+
+            <section id="celebration-screen" class="screen celebration" aria-labelledby="celebration-title">
+                <div class="big-star" aria-hidden="true">★</div>
+                <h1 id="celebration-title">You did it, Caleb!</h1>
+                <p>Five great tries.</p>
+                <button id="play-again-btn" class="primary-btn" type="button">Play again</button>
+                <button id="choose-game-btn" class="secondary-btn" type="button">Choose a game</button>
+            </section>
+        </main>
+    </div>
+
+    <dialog id="settings-dialog">
+        <form method="dialog">
+            <div class="dialog-heading">
+                <div>
+                    <p class="eyebrow">Grown-up settings</p>
+                    <h2>Make it comfortable</h2>
+                </div>
+                <button class="icon-btn" value="close" aria-label="Close settings">×</button>
+            </div>
+
+            <label class="setting-row">
+                <span><strong>Voice prompts</strong><small>Read directions and answers aloud</small></span>
+                <input id="voice-setting" type="checkbox" checked>
+            </label>
+            <label class="setting-row">
+                <span><strong>Celebration sounds</strong><small>Play a soft chime after a match</small></span>
+                <input id="sound-setting" type="checkbox" checked>
+            </label>
+            <label class="setting-row">
+                <span><strong>Calm motion</strong><small>Reduce bouncing and movement</small></span>
+                <input id="motion-setting" type="checkbox">
+            </label>
+            <label class="select-row">
+                <span><strong>Choices</strong><small>Fewer choices can make play easier</small></span>
+                <select id="choices-setting">
+                    <option value="2">2 choices</option>
+                    <option value="3" selected>3 choices</option>
+                    <option value="4">4 choices</option>
+                </select>
+            </label>
+            <label class="select-row">
+                <span><strong>Number range</strong><small>Used in both number games</small></span>
+                <select id="range-setting">
+                    <option value="5" selected>Numbers 1–5</option>
+                    <option value="10">Numbers 1–10</option>
+                </select>
+            </label>
+            <button id="save-settings" class="primary-btn" value="save">Save settings</button>
+        </form>
+    </dialog>
+
+    <script src="app.js"></script>
+</body>
+</html>
