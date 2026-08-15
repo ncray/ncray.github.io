@@ -37,6 +37,17 @@ layout: home
       </div>
     </a>
 
+    <!-- Entropy Profiler -->
+    <a href="/projects/entropy-game/" class="project-card">
+      <div class="card-accent" style="background: linear-gradient(135deg, #00f2fe, #4facfe);"></div>
+      <div class="project-info">
+        <span class="project-tag">Statistics & Game</span>
+        <h3 class="project-name">🎲 Entropy Profiler</h3>
+        <p class="project-desc">Real-time human randomness and sequential SPRT tester using Ville's test martingales, Shannon entropy rates, and universal online Markov predictors.</p>
+        <span class="project-btn">Test Entropy →</span>
+      </div>
+    </a>
+
     <!-- Number Sense Game -->
     <a href="/projects/number_sense/" class="project-card">
       <div class="card-accent" style="background: linear-gradient(135deg, #11998e, #38ef7d);"></div>

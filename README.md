@@ -27,6 +27,9 @@ The site hosts multiple standalone interactive applications in the `projects/` d
 5. **🖼️ Local Image Compressor (`/projects/image_compressor/`)**
    - *Description*: A secure, client-side browser utility for lightning-fast image compression and optimization before upload.
 
+6. **🎲 Entropy Profiler (`/projects/entropy-game/`)**
+   - *Description*: Real-time human entropy generation tester and sequential statistical diagnostic suite implementing Ville's test martingales, multi-order universal Markov predictors, Shannon entropy, and cognitive bias autopsy.
+
 ---
 
 ## 🇯🇵 Japan Trip Image-Sourcing Script Setup

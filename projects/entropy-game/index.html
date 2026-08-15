@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entropy Profiler — Real-Time Human Randomness & Sequential SPRT Tester</title>
+  <meta name="description" content="Test your ability to generate true entropy in real-time. Features sequential probability ratio tests (SPRT), test martingales, Shannon entropy diagnostics, and cognitive bias detection across Binary and 10-Digit modes.">
+  
+  <!-- Modern Typography: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- KaTeX for Beautiful Mathematical Typesetting -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Navigation Bar -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12h5l3 7 4-14 3 7h5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">ENTROPY PROFILER</h1>
+          <span class="brand-tagline">Sequential Randomness & SPRT Diagnostic Suite</span>
+        </div>
+      </div>
+
+      <!-- Mode Switcher -->
+      <div class="mode-switcher" role="tablist">
+        <button class="mode-tab-btn active" id="btn-mode-binary" role="tab" aria-selected="true">
+          <span class="mode-num">0 / 1</span>
+          <span class="mode-label">Binary Mode</span>
+          <span class="mode-cap">1.0 bit max</span>
+        </button>
+        <button class="mode-tab-btn" id="btn-mode-decimal" role="tab" aria-selected="false">
+          <span class="mode-num">0 – 9</span>
+          <span class="mode-label">Decimal Mode</span>
+          <span class="mode-cap">3.32 bits max</span>
+        </button>
+      </div>
+
+      <!-- Controls & Actions -->
+      <div class="header-actions">
+        <div class="sim-group">
+          <button class="btn btn-sm btn-ghost" id="btn-sim-prng" title="Toggle Continuous Cryptographic PRNG Bot (Runs Indefinitely)">
+            <span class="btn-icon" id="prng-btn-icon">⚡</span> <span id="prng-btn-text">Infinite PRNG Bot</span>
+          </button>
+          <div class="sim-bot-wrapper">
+            <select class="form-select-sm" id="sim-bot-select">
+              <option value="prng">Bot: Infinite PRNG (Uniform)</option>
+              <option value="gambler">Bot: Gambler's Fallacy (72% Alt)</option>
+              <option value="rhythm">Bot: Repetitive Rhythm</option>
+              <option value="counting">Bot: Arithmetic Counting</option>
+            </select>
+            <button class="btn btn-sm btn-ghost" id="btn-sim-bot" title="Run selected bot simulation">
+              <span id="sim-bot-btn-text">Run Bot</span>
+            </button>
+          </div>
+          <select class="form-select-sm" id="sim-speed-select" title="Simulation Speed">
+            <option value="100">10 keys/s</option>
+            <option value="30">33 keys/s (Fast)</option>
+            <option value="10">100 keys/s (Ultra)</option>
+          </select>
+        </div>
+
+        <button class="btn btn-sm btn-ghost" id="btn-header-math" title="View underlying formulas and live math evaluations">
+          <span>📐</span> Math Details
+        </button>
+        <button class="btn btn-sm btn-outline" id="btn-reset" title="Reset current session">
+          <span>🔄</span> Reset
+        </button>
+        <button class="btn btn-sm btn-icon-only" id="btn-settings" title="Settings & Parameters">
+          ⚙️
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="app-main">
+      <!-- 1. Hero Metrics Bar (Live Entropy Gauge, Integrity Bar, AI Predictor) -->
+      <section class="section-hero" id="hero-metrics-mount" aria-label="Live Metrics"></section>
+
+      <!-- 2. Sequence Ribbon (Live Tape of Keystrokes) -->
+      <section class="section-ribbon" id="sequence-ribbon-mount" aria-label="Keystroke Stream"></section>
+
+      <!-- 3. Keypad & Input Arena -->
+      <section class="section-keypad" id="keypad-mount" aria-label="Keypad Arena"></section>
+
+      <!-- 4. Diagnostic Charts Grid (4 Live Visual Cards) -->
+      <section class="section-diagnostics" id="diagnostic-charts-mount" aria-label="Statistical Diagnostics"></section>
+
+      <!-- 5. Mathematical & Statistical Deep-Dive Section -->
+      <div id="math-details-mount"></div>
+
+      <!-- 6. Educational Theory Primer Accordion -->
+      <section class="section-info">
+        <details class="info-accordion">
+          <summary class="info-summary">
+            <span class="info-title">📖 The Science: Why Humans Cannot Generate True Entropy</span>
+            <span class="info-icon">▾</span>
+          </summary>
+          <div class="info-content">
+            <div class="info-grid">
+              <div class="info-card">
+                <h4>1. The Gambler's Fallacy (Alternation Bias)</h4>
+                <p>Humans switch between digits far too frequently (often ~65% of the time in binary, instead of the 50% theoretical expectation). We intuitively feel that after a '1', a '0' is "overdue".</p>
+              </div>
+              <div class="info-card">
+                <h4>2. Streak / Run Starvation</h4>
+                <p>In a true random binary sequence of 60 bits, there is a &gt;90% chance of a streak of 4 or more identical symbols ($E[\max L] \approx \log_2 N$). Humans actively avoid long streaks, starving the sequence of natural clusters.</p>
+              </div>
+              <div class="info-card">
+                <h4>3. Sequential Martingales (Solving Peeking)</h4>
+                <p>Evaluating randomness after every key with standard p-values causes false-positive explosion. This app implements <strong>Test Martingales and Ville's Inequality</strong>, guaranteeing that false rejections are strictly bounded by $\alpha$ over indefinitely long typing.</p>
+              </div>
+              <div class="info-card">
+                <h4>4. Universal Online Predictor</h4>
+                <p>An adaptive multi-order Markov mixture (PPM / Context Tree) learns your personal typing grammar in real-time. If it can guess your next key with &gt;50% accuracy (or &gt;10% in decimal), your sequence is compressed and non-random.</p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-meta">
+        <span>Entropy Profiler v1.0</span> • 
+        <span>Sequential Probability Ratio Test (SPRT) & Ville's Test Martingale</span> • 
+        <span>Continuous Bounded Type I Error</span>
+      </div>
+    </footer>
+
+    <!-- Modals Mount Point -->
+    <div id="modal-mount"></div>
+  </div>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "entropy-profiler",
+  "version": "1.0.0",
+  "description": "Real-time human entropy generation tester and sequential statistical diagnostic suite",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "keywords": ["entropy", "randomness", "statistics", "martingale", "sprt", "shannon-entropy"],
+  "author": "",
+  "license": "MIT"
+}
