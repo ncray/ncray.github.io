@@ -14,7 +14,7 @@
   <!-- KaTeX for Beautiful Mathematical Typesetting -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" crossorigin="anonymous" onload="renderMathInElement(document.body, { delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}, {left: '$', right: '$', display: false}], ignoredTags: ['script', 'noscript', 'style', 'textarea', 'code', 'pre'], throwOnError: false });"></script>
 
   <link rel="stylesheet" href="./src/style.css">
 </head>
@@ -116,11 +116,11 @@
               </div>
               <div class="info-card">
                 <h4>2. Streak / Run Starvation</h4>
-                <p>In a true random binary sequence of 60 bits, there is a &gt;90% chance of a streak of 4 or more identical symbols ($E[\max L] \approx \log_2 N$). Humans actively avoid long streaks, starving the sequence of natural clusters.</p>
+                <p>In a true random binary sequence of 60 bits, there is a &gt;90% chance of a streak of 4 or more identical symbols (\(\mathbb{E}[\max L] \approx \log_2 N\)). Humans actively avoid long streaks, starving the sequence of natural clusters.</p>
               </div>
               <div class="info-card">
                 <h4>3. Sequential Martingales (Solving Peeking)</h4>
-                <p>Evaluating randomness after every key with standard p-values causes false-positive explosion. This app implements <strong>Test Martingales and Ville's Inequality</strong>, guaranteeing that false rejections are strictly bounded by $\alpha$ over indefinitely long typing.</p>
+                <p>Evaluating randomness after every key with standard p-values causes false-positive explosion. This app implements <strong>Test Martingales and Ville's Inequality</strong>, guaranteeing that false rejections are strictly bounded by \(\alpha\) over indefinitely long typing.</p>
               </div>
               <div class="info-card">
                 <h4>4. Universal Online Predictor</h4>

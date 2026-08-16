@@ -26,17 +26,18 @@ export class MathDetails {
     setTimeout(() => clearInterval(checkInterval), 4000);
   }
 
-  renderMath() {
-    const target = this.container.querySelector('#math-details-content') || this.container;
+  renderMath(targetElement = null) {
+    const target = targetElement || this.container.querySelector('#math-details-content') || this.container;
     if (typeof renderMathInElement === 'function') {
       try {
         renderMathInElement(target, {
           delimiters: [
             { left: '$$', right: '$$', display: true },
             { left: '\\[', right: '\\]', display: true },
-            { left: '\\(', right: '\\)', display: false }
+            { left: '\\(', right: '\\)', display: false },
+            { left: '$', right: '$', display: false }
           ],
-          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'code'],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'code', 'pre'],
           throwOnError: false
         });
       } catch (e) {

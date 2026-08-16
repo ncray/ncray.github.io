@@ -30,7 +30,7 @@ class App {
     this.btnReset = document.getElementById('btn-reset');
     this.btnSettings = document.getElementById('btn-settings');
     this.btnSimPRNG = document.getElementById('btn-sim-prng');
-    this.btnSimBot = document.getElementById('sim-bot-select') ? document.getElementById('btn-sim-bot') : null;
+    this.btnSimBot = document.getElementById('btn-sim-bot');
     this.simBotSelect = document.getElementById('sim-bot-select');
 
     // UI Containers
@@ -99,16 +99,14 @@ class App {
     });
 
     // Bot Simulation
-    if (this.btnSimBot && this.simBotSelect) {
-      this.btnSimBot.addEventListener('click', () => {
-        const botType = this.simBotSelect.value;
-        if (this.isSimulating && this.currentSimType === botType) {
-          this.stopSimulation();
-        } else {
-          this.runSimulation(botType);
-        }
-      });
-    }
+    this.btnSimBot.addEventListener('click', () => {
+      const botType = this.simBotSelect.value;
+      if (this.isSimulating && this.currentSimType === botType) {
+        this.stopSimulation();
+      } else {
+        this.runSimulation(botType);
+      }
+    });
 
     // Header Math Details toggle
     const btnHeaderMath = document.getElementById('btn-header-math');
@@ -200,7 +198,7 @@ class App {
       if (this.prngBtnIcon) this.prngBtnIcon.textContent = '⏹';
       if (this.prngBtnText) this.prngBtnText.textContent = 'Stop PRNG';
     } else {
-      if (this.btnSimBot) this.btnSimBot.classList.add('btn-sim-active');
+      this.btnSimBot.classList.add('btn-sim-active');
       if (this.simBotBtnText) this.simBotBtnText.textContent = 'Stop Bot';
     }
 
@@ -245,7 +243,7 @@ class App {
     if (this.prngBtnIcon) this.prngBtnIcon.textContent = '⚡';
     if (this.prngBtnText) this.prngBtnText.textContent = 'Infinite PRNG Bot';
 
-    if (this.btnSimBot) this.btnSimBot.classList.remove('btn-sim-active');
+    this.btnSimBot.classList.remove('btn-sim-active');
     if (this.simBotBtnText) this.simBotBtnText.textContent = 'Run Bot';
   }
 }
@@ -253,4 +251,32 @@ class App {
 // Boot application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   window.app = new App();
+
+  const renderGlobalMath = () => {
+    if (typeof renderMathInElement === 'function') {
+      try {
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '$', right: '$', display: false }
+          ],
+          ignoredTags: ['script', 'noscript', 'style', 'textarea', 'code', 'pre'],
+          throwOnError: false
+        });
+      } catch (e) {
+        console.warn('KaTeX render warning:', e);
+      }
+      return true;
+    }
+    return false;
+  };
+
+  if (!renderGlobalMath()) {
+    const katexTimer = setInterval(() => {
+      if (renderGlobalMath()) clearInterval(katexTimer);
+    }, 150);
+    setTimeout(() => clearInterval(katexTimer), 4000);
+  }
 });
